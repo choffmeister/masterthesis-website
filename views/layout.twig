@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Coxeter</title>
+        <link href="/css/main.css" rel="stylesheet" />
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+                tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
+            });
+        </script>
+        <script src="/mathjax/MathJax.js?config=TeX-AMS_HTML-full" type="text/javascript"></script>
+    </head>
+    <body>
+        <header>
+        </header>
+        <section>
+            <h1>
+                {% block title %}(Untitled){% endblock %}
+            </h1>
+            {% block content %}{% endblock %}
+        </section>
+        <footer>
+            &copy; 2012 Christian Hoffmeister
+        </footer>
+    </body>
+</html>
