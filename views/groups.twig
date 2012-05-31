@@ -1,0 +1,26 @@
+{% extends "layout.twig" %}
+
+{% block title %}
+Coxeter groups
+{% endblock %}
+
+{% block content %}
+<table>
+    <thead>
+        <tr>
+            <td></td>
+            <td>Name</td>
+            <td>Rank</td>
+        </tr>
+    </thead>
+    <tbody>
+    {% for group in groups %}
+        <tr>
+            <td><a href="/group/{{ group.id }}">Show</a></td>
+            <td>${{ group.name | default('-') }}$</td>
+            <td>{{ group.rank }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

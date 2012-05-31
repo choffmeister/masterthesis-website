@@ -1,0 +1,45 @@
+{% extends "layout.twig" %}
+
+{% block title %}
+Coxeter group
+{% endblock %}
+
+{% block content %}
+<dl>
+    <dt>Name</dt>
+    <dd>${{ group.name | default('-') }}$</dd>
+    <dt>Rank</dt>
+    <dd>{{ group.rank }}</dd>
+    <dt>Coxetermatrix</dt>
+    <dd>
+        $ \begin{pmatrix}
+        {% if group.rank == 1 %}
+            1
+        {% else %}
+	        {% for i in range(0, group.rank - 1) %}
+	            {% for j in range(0, group.rank - 2) %}
+	               {{ group.matrix[i][j] > 0 ? group.matrix[i][j] : '\\infty' }} &
+	            {% endfor %}
+	            {{ group.matrix[i][group.rank - 1] > 0 ? group.matrix[i][group.rank - 1] : '\\infty' }} \\
+	        {% endfor %}
+        {% endif %}
+        \end{pmatrix} $
+    </dd>
+    <dt>Automorphisms</dt>
+    <dd>
+    {% for automorphism in automorphisms %}
+        <div>
+            $\theta = 
+            {% for transposition in automorphism.transpositions %}
+                (s_{{ transposition[0] }} s_{{ transposition[1] }})
+            {% else %}
+                \textrm{id}
+            {% endfor %}
+            $
+        </div>
+    {% else %}
+        -
+    {% endfor %}
+    </dd>
+</dl>
+{% endblock %}
