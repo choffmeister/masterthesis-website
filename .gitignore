@@ -3,6 +3,5 @@
 .project
 .settings/
 
-# composer
-vendor/composer
-vendor/.composer
+# vendor
+vendor/
