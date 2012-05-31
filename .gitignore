@@ -2,3 +2,7 @@
 .buildpath
 .project
 .settings/
+
+# composer
+vendor/composer
+vendor/.composer
