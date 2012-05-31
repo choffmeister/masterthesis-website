@@ -5,12 +5,13 @@ Coxeter groups
 {% endblock %}
 
 {% block content %}
-<table>
+<table class="table table-bordered table-striped">
     <thead>
         <tr>
             <td></td>
             <td>Name</td>
             <td>Rank</td>
+            <td>Size</td>
         </tr>
     </thead>
     <tbody>
@@ -19,6 +20,7 @@ Coxeter groups
             <td><a href="/group/{{ group.id }}">Show</a></td>
             <td>${{ group.name | default('-') }}$</td>
             <td>{{ group.rank }}</td>
+            <td>{{ group.size > 0 ? group.size : '$\\infty$' }}</td>
         </tr>
     {% endfor %}
     </tbody>

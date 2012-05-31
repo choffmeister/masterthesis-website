@@ -2,7 +2,11 @@
 <html>
     <head>
         <title>Coxeter</title>
-        <link href="/css/main.css" rel="stylesheet" />
+        <link href="/css/fonts.css" rel="stylesheet" type="text/css" />
+        <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="/css/main.css" rel="stylesheet" type="text/css"/>
+        <script src="/js/jquery-1.7.2.min.js" type="text/javascript"></script>
+        <script src="/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
         <script type="text/x-mathjax-config">
             MathJax.Hub.Config({
                 tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
@@ -11,16 +15,25 @@
         <script src="/mathjax/MathJax.js?config=TeX-AMS_HTML-full" type="text/javascript"></script>
     </head>
     <body>
-        <header>
+        <header class="container">
+            <nav class="pull-right">
+	            <ul>
+	                <li><a href="/">Home</a></li>
+	                <li><a href="http://en.wikipedia.org/wiki/Coxeter_group" target="_blank">Coxeter group</a></li>
+	            </ul>
+            </nav>
+            <h1>Calculation results on twisted involutions</h1>
         </header>
-        <section>
-            <h1>
+        <hr />
+        <section class="container">
+            <h3>
                 {% block title %}(Untitled){% endblock %}
-            </h1>
+            </h3>
             {% block content %}{% endblock %}
         </section>
-        <footer>
-            &copy; 2012 Christian Hoffmeister
+        <hr />
+        <footer class="container">
+            &copy; 2012 <a href="http://choffmeister.de/" target="_blank">Christian Hoffmeister</a>
         </footer>
     </body>
 </html>

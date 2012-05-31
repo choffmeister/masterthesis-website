@@ -5,41 +5,55 @@ Coxeter group
 {% endblock %}
 
 {% block content %}
-<dl>
-    <dt>Name</dt>
-    <dd>${{ group.name | default('-') }}$</dd>
-    <dt>Rank</dt>
-    <dd>{{ group.rank }}</dd>
-    <dt>Coxetermatrix</dt>
-    <dd>
-        $ \begin{pmatrix}
-        {% if group.rank == 1 %}
-            1
-        {% else %}
-	        {% for i in range(0, group.rank - 1) %}
-	            {% for j in range(0, group.rank - 2) %}
-	               {{ group.matrix[i][j] > 0 ? group.matrix[i][j] : '\\infty' }} &
+<table class="table table-bordered table-striped">
+<tbody>
+    <tr>
+	    <td>Name</td>
+	    <td>${{ group.name | default('-') }}$</td>
+    </tr>
+    <tr>
+	    <td>Rank</td>
+	    <td>{{ group.rank }}</td>
+    </tr>
+    <tr>
+        <td>Size</td>
+        <td>{{ group.size > 0 ? group.size : '$\\infty$' }}</td>
+    </tr>
+    <tr>
+	    <td>Coxetermatrix</td>
+	    <td>
+	        $ \begin{pmatrix}
+	        {% if group.rank == 1 %}
+	            1
+	        {% else %}
+	            {% for i in range(0, group.rank - 1) %}
+	                {% for j in range(0, group.rank - 2) %}
+	                   {{ group.matrix[i][j] > 0 ? group.matrix[i][j] : '\\infty' }} &
+	                {% endfor %}
+	                {{ group.matrix[i][group.rank - 1] > 0 ? group.matrix[i][group.rank - 1] : '\\infty' }} \\
 	            {% endfor %}
-	            {{ group.matrix[i][group.rank - 1] > 0 ? group.matrix[i][group.rank - 1] : '\\infty' }} \\
-	        {% endfor %}
-        {% endif %}
-        \end{pmatrix} $
-    </dd>
-    <dt>Automorphisms</dt>
-    <dd>
-    {% for automorphism in automorphisms %}
-        <div>
-            $\theta = 
-            {% for transposition in automorphism.transpositions %}
-                (s_{{ transposition[0] }} s_{{ transposition[1] }})
-            {% else %}
-                \textrm{id}
-            {% endfor %}
-            $
-        </div>
-    {% else %}
-        -
-    {% endfor %}
-    </dd>
-</dl>
+	        {% endif %}
+	        \end{pmatrix} $
+	    </td>
+    </tr>
+    <tr>
+	    <td>Automorphisms</td>
+	    <td>
+		    {% for automorphism in automorphisms %}
+		        <div>
+		            $\theta = 
+		            {% for transposition in automorphism.transpositions %}
+		                (s_{{ transposition[0] }} s_{{ transposition[1] }})
+		            {% else %}
+		                \textrm{id}
+		            {% endfor %}
+		            $
+		        </div>
+		    {% else %}
+		        -
+		    {% endfor %}
+	    </td>
+    </tr>
+</tbody>
+</table>
 {% endblock %}
