@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 01, 2012 at 09:46 AM
+-- Generation Time: Jun 01, 2012 at 09:47 AM
 -- Server version: 5.5.22-0ubuntu1
 -- PHP Version: 5.3.10-1ubuntu3.1
 
@@ -26,6 +26,7 @@ SET time_zone = "+00:00";
 -- Table structure for table `automorphisms`
 --
 
+DROP TABLE IF EXISTS `automorphisms`;
 CREATE TABLE IF NOT EXISTS `automorphisms` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `group_id` int(11) NOT NULL,
@@ -55,6 +56,7 @@ INSERT INTO `automorphisms` (`id`, `group_id`, `transpositions`) VALUES
 -- Table structure for table `groups`
 --
 
+DROP TABLE IF EXISTS `groups`;
 CREATE TABLE IF NOT EXISTS `groups` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
@@ -81,6 +83,7 @@ INSERT INTO `groups` (`id`, `name`, `rank`, `size`, `matrix`) VALUES
 -- Table structure for table `weakorderings`
 --
 
+DROP TABLE IF EXISTS `weakorderings`;
 CREATE TABLE IF NOT EXISTS `weakorderings` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `group_id` int(11) NOT NULL,
