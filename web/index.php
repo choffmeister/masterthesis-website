@@ -91,6 +91,16 @@ $app->get('/weakordering/{groupId}/{automorphismId}', function($groupId, $automo
     ));
 });
 
+$app->get('/weakordering/{groupId}/{automorphismId}/graph.json', function($groupId, $automorphismId) use($app) {
+    $weakOrdering = $app['db']->fetchAssoc('SELECT * FROM weakorderings WHERE group_id = ? AND automorphism_id = ?', array($groupId, $automorphismId));
+
+    if (!$weakOrdering) {
+        return new JsonResponse(false);
+    }
+
+    return new JsonResponse(json_decode($weakOrdering['ordering']));
+});
+
 $app->get('/weakordering/{groupId}/{automorphismId}/graph.svg', function($groupId, $automorphismId) use($app) {
     $weakOrdering = $app['db']->fetchAssoc('SELECT * FROM weakorderings WHERE group_id = ? AND automorphism_id = ?', array($groupId, $automorphismId));
 

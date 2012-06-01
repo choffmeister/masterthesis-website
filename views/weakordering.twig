@@ -11,7 +11,45 @@ $
 {% endblock %}
 
 {% block content %}
-<p>
-    <object data="/weakordering/{{ group.id }}/{{ automorphism.id }}/graph.svg" type="image/svg+xml"></object>
-</p>
+<div id="canvas"></div>
+<script type="text/javascript">
+$(function () {
+	$.ajax('/weakordering/{{ group.id }}/{{ automorphism.id }}/graph.json', {
+		'dataType': 'json',
+		'method': 'GET',
+		success: function (data) {
+			var g = new Graph();
+			
+		    var render = function(r, n) {
+	            var set = r.set().push(
+	                /* custom objects go here */
+	                r.rect(n.point[0]-30, n.point[1]-13, 60, 44).attr({ fill: '#feb', r: '12px', 'stroke-width': '1px' })).push(
+	                r.text(n.point[0], n.point[1] + 10, (n.label || n.id)));
+	            return set;
+	        };
+			
+			for (var i = 0; i < data[1].length; i++) {
+				g.addNode(data[1][i][0], { render:render, label: data[1][i][0].replace(/[s|\*]/gi,'') });
+			}
+			
+			for (var i = 0; i < data[2].length; i++) {
+				g.addEdge(data[1][data[2][i][0]][0], data[1][data[2][i][1]][0], { label: data[0][data[2][i][2]].replace(/[s|\*]/gi,'') });
+			}
+			
+			var layouter = new Graph.Layout.Spring(g);
+		    var renderer = new Graph.Renderer.Raphael('canvas', g, 800, 600);
+
+		    redraw = function() {
+		        layouter.layout();
+		        renderer.draw();
+		    };
+		    
+		    redraw();
+		},
+		error: function (err) {
+			alert(err);
+		}
+	});
+});
+</script>
 {% endblock %}
