@@ -15,7 +15,7 @@ class WeakOrderingGraph
     private $spaceX;
     private $spaceY;
 
-    public function __construct(array $raw, $margin = 25, $spaceX = 120, $spaceY = 60)
+    public function __construct(array $raw, $margin = 75, $spaceX = 150, $spaceY = 75)
     {
         $this->margin = $margin;
         $this->spaceX = $spaceX;
