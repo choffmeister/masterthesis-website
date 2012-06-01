@@ -13,6 +13,58 @@ $
 {% block content %}
 <div id="canvas"></div>
 <script type="text/javascript">
+
+
+WeakOrderingLayout = function(graph) {
+    this.graph = graph;
+    this.layers = [];
+    this.layout();
+};
+
+WeakOrderingLayout.prototype = {
+    get: function (twistedLength) {
+        if (this.layers.length < twistedLength + 1) {
+        	this.layers.length = twistedLength + 1;
+        }
+
+        if (!this.layers[twistedLength]) {
+            this.layers[twistedLength] = 1;
+            return 0;
+        } else {
+            return this.layers[twistedLength]++;
+        }
+    },
+    layout: function () {
+        for (i in this.graph.nodes) {
+            var node = this.graph.nodes[i];
+            node.layoutPosX = node.twistedLength;
+            node.layoutPosY = this.get(node.twistedLength);
+            node.layoutForceX = 0;
+            node.layoutForceY = 0;
+        }
+        
+        this.layoutCalcBounds();
+    },
+    layoutCalcBounds: function() {
+        var minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+
+        for (i in this.graph.nodes) {
+            var x = this.graph.nodes[i].layoutPosX;
+            var y = this.graph.nodes[i].layoutPosY;
+            
+            if(x > maxx) maxx = x;
+            if(x < minx) minx = x;
+            if(y > maxy) maxy = y;
+            if(y < miny) miny = y;
+        }
+
+        this.graph.layoutMinX = minx-0.1;
+        this.graph.layoutMaxX = maxx+0.1;
+        this.graph.layoutMinY = miny-0.1;
+        this.graph.layoutMaxY = maxy+0.1;
+    }
+};
+
 $(function () {
 	$.ajax('/weakordering/{{ group.id }}/{{ automorphism.id }}/graph.json', {
 		'dataType': 'json',
@@ -29,7 +81,7 @@ $(function () {
 	        };
 			
 			for (var i = 0; i < data[1].length; i++) {
-				g.addNode(data[1][i][0], { render:render, label: data[1][i][0].replace(/[s|\*]/gi,'') });
+				g.addNode(data[1][i][0], { render:render, label: data[1][i][0].replace(/[s|\*]/gi,''), twistedLength: data[1][i][1] });
 			}
 			
 			for (var i = 0; i < data[2].length; i++) {
@@ -37,6 +89,7 @@ $(function () {
 			}
 			
 			var layouter = new Graph.Layout.Spring(g);
+			var layouter = new WeakOrderingLayout(g);
 		    var renderer = new Graph.Renderer.Raphael('canvas', g, 800, 600);
 
 		    redraw = function() {
@@ -44,7 +97,7 @@ $(function () {
 		        renderer.draw();
 		    };
 		    
-		    redraw();
+		    renderer.draw();
 		},
 		error: function (err) {
 			alert(err);
