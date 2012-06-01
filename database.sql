@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: May 31, 2012 at 04:22 PM
+-- Generation Time: Jun 01, 2012 at 09:46 AM
 -- Server version: 5.5.22-0ubuntu1
 -- PHP Version: 5.3.10-1ubuntu3.1
 
@@ -75,6 +75,29 @@ INSERT INTO `groups` (`id`, `name`, `rank`, `size`, `matrix`) VALUES
 (4, 'A_4', 4, 120, '[3,2,2,3,2,3]'),
 (5, '\\tilde A_1', 2, 0, '[0]');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `weakorderings`
+--
+
+CREATE TABLE IF NOT EXISTS `weakorderings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
+  `automorphism_id` int(11) NOT NULL,
+  `ordering` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `group_id` (`group_id`,`automorphism_id`),
+  KEY `automorphism_id` (`automorphism_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
+
+--
+-- Dumping data for table `weakorderings`
+--
+
+INSERT INTO `weakorderings` (`id`, `group_id`, `automorphism_id`, `ordering`) VALUES
+(1, 2, 4, '[["s1","s2"],[["e",0],["s1",1],["s2",1],["s1*s2",2],["s2*s1",2],["s1*s2*s1",3]],[[0,1,0],[0,2,1],[1,3,1],[2,4,0],[3,5,0],[4,5,1]]]');
+
 --
 -- Constraints for dumped tables
 --
@@ -84,6 +107,13 @@ INSERT INTO `groups` (`id`, `name`, `rank`, `size`, `matrix`) VALUES
 --
 ALTER TABLE `automorphisms`
   ADD CONSTRAINT `automorphisms_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`);
+
+--
+-- Constraints for table `weakorderings`
+--
+ALTER TABLE `weakorderings`
+  ADD CONSTRAINT `weakorderings_ibfk_2` FOREIGN KEY (`automorphism_id`) REFERENCES `automorphisms` (`id`),
+  ADD CONSTRAINT `weakorderings_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

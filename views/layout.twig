@@ -15,24 +15,23 @@
         <script src="/mathjax/MathJax.js?config=TeX-AMS_HTML-full" type="text/javascript"></script>
     </head>
     <body>
-        <header class="container">
+        <header class="container-fluid">
             <nav class="pull-right">
 	            <ul>
 	                <li><a href="/">Home</a></li>
-	                <li><a href="http://en.wikipedia.org/wiki/Coxeter_group" target="_blank">Coxeter group</a></li>
 	            </ul>
             </nav>
             <h1>Calculation results on twisted involutions</h1>
         </header>
         <hr />
-        <section class="container">
-            <h3>
+        <section class="container-fluid">
+            <h3 id="title">
                 {% block title %}(Untitled){% endblock %}
             </h3>
             {% block content %}{% endblock %}
         </section>
         <hr />
-        <footer class="container">
+        <footer class="container-fluid">
             &copy; 2012 <a href="http://choffmeister.de/" target="_blank">Christian Hoffmeister</a>
         </footer>
     </body>

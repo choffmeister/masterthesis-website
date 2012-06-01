@@ -1,0 +1,17 @@
+{% extends "layout.twig" %}
+
+{% block title %}
+Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with automorphism $\theta = 
+{% for transposition in automorphism.transpositions %}
+    (s_{{ transposition[0] }} s_{{ transposition[1] }})
+{% else %}
+    \textrm{id}
+{% endfor %}
+$
+{% endblock %}
+
+{% block content %}
+<p>
+    <object data="/weakordering/{{ group.id }}/{{ automorphism.id }}/graph.svg" type="image/svg+xml"></object>
+</p>
+{% endblock %}
