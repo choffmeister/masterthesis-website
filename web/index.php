@@ -117,6 +117,38 @@ $app->get('/weakordering/{groupId}/{automorphismId}/graph.svg', function($groupI
     return new Response($weakOrderingGraph->toSvg(), 200, array('Content-type' => 'image/svg+xml'));
 });
 
+$app->post('/api/v1/import', function(Request $request) use ($app) {
+    $data = json_decode($request->getContent());
+
+    foreach ($data as $group) {
+        $app['db']->insert('groups', array(
+           'name' => $group[0],
+           'rank' => $group[1],
+           'size' => $group[2],
+           'matrix' => json_encode($group[3]),
+        ));
+
+        $groupId = $app['db']->lastInsertId();
+
+        foreach ($group[4] as $automorphism) {
+            $app['db']->insert('automorphisms', array(
+                'group_id' => $groupId,
+                'transpositions' => json_encode($automorphism[0]),
+            ));
+
+            $automorphismId = $app['db']->lastInsertId();
+
+            $app['db']->insert('weakorderings', array(
+                'group_id' => $groupId,
+                'automorphism_id' => $automorphismId,
+                'ordering' => json_encode($automorphism[1]),
+            ));
+        }
+    }
+
+    return new JsonResponse(true);
+});
+
 $app->error(function(Exception $exception, $code) use($app) {
     $title = isset(Response::$statusTexts[$code]) ? Response::$statusTexts[$code] : Response::$statusTexts[500];
 
