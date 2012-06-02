@@ -70,6 +70,11 @@ $(function () {
 		'dataType': 'json',
 		'method': 'GET',
 		success: function (data) {
+			if (data === false) {
+				$('#canvas').html('Weak ordering has not been calculated yet!');
+				return;
+			}
+			
 			var g = new Graph();
 			
 		    var render = function(r, n) {
