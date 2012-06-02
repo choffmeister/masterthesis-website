@@ -11,7 +11,8 @@ $
 {% endblock %}
 
 {% block content %}
-<div id="canvas" style="border: 1px solid #ddd; background-color: #fff; overflow: auto; max-height: 400px;"></div>
+<div id="generators">Double click graph to switch fullscreen. </div>
+<div id="canvas" class="graph"></div>
 <script type="text/javascript">
 $(function () {
     $.ajax('/weakordering/{{ group.id }}/{{ automorphism.id }}/graph.json', {
@@ -28,30 +29,73 @@ $(function () {
             var edges = data[2];
             
             var graph = new Graph($('#canvas')[0], 100, 100);
-            var levels = {};
-            var size = [0, 0];
-            
-            $.each(vertices, function(i, v) {
-                if (!levels[v[1]]) {
-                    levels[v[1]] = 0;
-                }
-
-                var vertex = graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, '') });
-                vertex.positionX = levels[v[1]]++;
-                vertex.positionY = v[1];
-
-                if (size[0] < levels[v[1]]) size[0] = levels[v[1]];
-                if (size[1] < v[1]) size[1] = v[1];
+            $.each(vertices, function (i, v) {
+                graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1] });
             });
-            $.each(edges, function(i, e) {
+            $.each(edges, function (i, e) {
                 graph.addEdge(vertices[e[0]][0], vertices[e[1]][0], { label: e[2] });
             });
             
-            graph.width = size[0] * 150;
-            graph.height = size[1] * 150;
-            graph.scale = new GraphScale.Linear(-1, size[0], -1, size[1] + 1, graph.width, graph.height);
+            var layoutGraph = function () {
+                var levels = {};
+                var size = [0, 0];
+                
+                $.each(graph.vertices, function(i, v) {
+                    if (!levels[v.options.twistedLength]) {
+                        levels[v.options.twistedLength] = 0;
+                    }
+
+                    v.positionX = levels[v.options.twistedLength]++;
+                    v.positionY = v.options.twistedLength;
+                    
+                    if (size[0] < levels[v.options.twistedLength]) size[0] = levels[v.options.twistedLength];
+                    if (size[1] < v.options.twistedLength) size[1] = v.options.twistedLength;
+                });
+                
+                graph.width = size[0] * 150;
+                graph.height = size[1] * 150;
+                graph.scale = new GraphScale.Linear(graph, -1, size[0], -1, size[1] + 1);
+            };
+            layoutGraph();
             
-            console.log(levels);
+            $.each(generators, function (i, g) {
+                var checkbox = $('<input type="checkbox" checked="checked" name="generators[]" value="' + (parseInt(g.replace(/s/g, '')) - 1) + '" />');
+                
+                checkbox.change(function () {
+                    
+                    var selectedGenerators = new Array();
+                    $("input[@name='generators[]']:checked").each(function() { selectedGenerators.push(parseInt($(this).val())); });
+
+                    var subGraph = function (I) {
+                        graph.walk({
+                            vertexCallback: function (v) {
+                                v.hide();
+                            },
+                            edgeCallback: function (e) {
+                                e.hide();
+                            }
+                        });
+                        
+                        graph.walk({
+                            edgeSelector: function (e) {
+                               return $.inArray(e.options.label, I) != -1;
+                            },
+                            vertexCallback: function (v) {
+                                v.show();
+                            },
+                            edgeCallback: function (e) {
+                                e.show();
+                            }
+                        });
+                    };
+
+                    subGraph(selectedGenerators);
+                    graph.draw();
+                });
+                
+                $('#generators').append(checkbox).append(' ' + g);
+            });
+            
             console.log(graph);
             graph.draw();
         },

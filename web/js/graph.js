@@ -6,39 +6,10 @@ Graph = function (element, width, height) {
 	graph.height = height;
 	graph.vertices = {};
 	graph.edges = [];
-	graph.scale = new GraphScale.Linear(0, 100, 0, 100, graph.width, graph.height);
-	
-//	$(graph.element).mousewheel(function (event, delta) {
-//		var x = delta == 1 ? graph.scale.unscaleX(event.pageX - $(graph.element).offset().left) : (graph.scale.maxX + graph.scale.minX) / 2.0;
-//		var y = delta == 1 ? graph.scale.unscaleX(event.pageY - $(graph.element).offset().top) : (graph.scale.maxY + graph.scale.minY) / 2.0;
-//		
-//		var newXrange = (graph.scale.maxX - graph.scale.minX) * (1.0 - delta * 0.2);
-//		var newYrange = (graph.scale.maxY - graph.scale.minY) * (1.0 - delta * 0.2);
-//
-//		graph.scale = new GraphScale.Linear(x - newXrange / 2, x + newXrange / 2, y - newYrange / 2, y + newYrange / 2, graph.width, graph.height);
-//		graph.draw();
-//		
-//		return false;
-//	});
+	graph.scale = new GraphScale.Linear(graph, 0, 100, 0, 100);
 	
 	$(graph.element).dblclick(function () {
-		if ($(graph.element).css('position') != 'fixed') {
-			$(graph.element).css({
-				'position': 'fixed',
-				'z-index': 10000,
-				'left': 0,
-				'top': 0,
-				'right': 0,
-				'bottom': 0,
-				'max-height': 'none'
-			});
-		} else {
-			$(graph.element).css({
-				'position': 'static',
-				'z-index': 0,
-				'max-height': '400px'
-			});
-		}
+		$(graph.element).toggleClass('graph-fullscreen');
 	});
 };
 
@@ -46,6 +17,7 @@ Graph.prototype = {
 	addVertex: function(id, options) {
 		options = $.extend({
 			label: id,
+			highlighted: false,
 			visible: true
 		}, options);
 		
@@ -58,6 +30,7 @@ Graph.prototype = {
 		options = $.extend({
 			label: '',
 			directed: false,
+			highlighted: false,
 			visible: true
 		}, options);
 		
@@ -71,6 +44,8 @@ Graph.prototype = {
 		
 		var edge = new GraphEdge(source, target, options);
 		this.edges.push(edge);
+		source.edges.push(edge);
+		target.edges.push(edge);
 		return edge;
 	},
 	
@@ -79,7 +54,7 @@ Graph.prototype = {
 		
 		$(graph.element).html('');
 		var canvas = Raphael(graph.element, graph.width, graph.height);
-
+		
 		$.each(this.edges, function(i, edge) {
 			if (!edge.options.visible || !edge.source.options.visible || !edge.target.options.visible) return;
 
@@ -89,6 +64,10 @@ Graph.prototype = {
 			var y2 = graph.scale.scaleY(edge.target.positionY);
 			
 			var line = canvas.path('M' + x1 + ',' + y1 + 'L' + x2 + ',' + y2);
+			if (edge.options.highlighted) {
+				line.attr('stroke', '#ff0000');
+			}
+			
 			var text = canvas.text((x1 + x2) / 2.0, (y1 + y2) / 2.0, edge.options.label);
 		});
 		
@@ -102,6 +81,47 @@ Graph.prototype = {
 			rect.attr('fill', '#fff');
 			var text = canvas.text(x, y, vertex.options.label);
 		});
+	},
+	
+	walk: function(options) {
+		options = $.extend({
+			edgeSelector: function (e) {
+				return true;
+			},
+			vertexSelector: function (e) {
+				return true;
+			},
+			edgeCallback: function (e) {
+			},
+			vertexCallback: function (v) {
+			}
+		}, options);
+		
+		var stack = new Array();
+		var walkedVertices = new Array();
+		var walkedEdges = new Array();
+		stack.push(this.vertices["e"]);
+		
+		while (stack.length > 0) {
+			var v = stack.pop();
+			
+            if ($.inArray(v, walkedVertices) != -1) continue;
+            walkedVertices.push(v);
+			
+        	if (!options.vertexSelector(v)) return;
+        	options.vertexCallback(v);
+            
+            $.each(v.edges, function (i, e) {
+                if (e.source != v) return;
+                if ($.inArray(e, walkedEdges) != -1) return;
+                walkedEdges.push(e);
+                
+                if (!options.edgeSelector(e)) return;
+                
+                options.edgeCallback(e);
+                stack.push(e.target);
+            });
+		}
 	}
 };
 
@@ -109,6 +129,7 @@ GraphVertex = function (id, options) {
 	this.id = id;
 	this.positionX = 0.0;
 	this.positionY = 0.0;
+	this.edges = [];
 	this.options = options;
 };
 
@@ -119,6 +140,14 @@ GraphVertex.prototype = {
 	
 	show: function () {
 		this.options.visible = true;
+	},
+	
+	unhighlight: function () {
+		this.options.highlighted = false;
+	},
+	
+	highlight: function () {
+		this.options.highlighted = true;
 	}
 };
 
@@ -135,17 +164,24 @@ GraphEdge.prototype = {
 	
 	show: function () {
 		this.options.visible = true;
+	},
+	
+	unhighlight: function () {
+		this.options.highlighted = false;
+	},
+	
+	highlight: function () {
+		this.options.highlighted = true;
 	}
 };
 
 GraphScale = {};
-GraphScale.Linear = function(minX, maxX, minY, maxY, width, height) {
+GraphScale.Linear = function(graph, minX, maxX, minY, maxY) {
+	this.graph = graph;
 	this.minX = minX;
 	this.maxX = maxX;
 	this.minY = minY;
 	this.maxY = maxY;
-	this.width = width;
-	this.height = height;
 	
 	if (maxX < minX)
 		throw 'Maximal X cannot be smaller than minimal X';
@@ -165,16 +201,16 @@ GraphScale.Linear = function(minX, maxX, minY, maxY, width, height) {
 
 GraphScale.Linear.prototype = {
 	scaleX: function (x) {
-		return (x - this.minX) / (this.maxX - this.minX) * this.width;
+		return (x - this.minX) / (this.maxX - this.minX) * this.graph.width;
 	},
 	scaleY: function (y) {
-		return (y - this.minY) / (this.maxY - this.minY) * this.height;
+		return (y - this.minY) / (this.maxY - this.minY) * this.graph.height;
 	},
 	unscaleX: function (x) {
-		return (x / this.width) * (this.maxX - this.minX) + this.minX;
+		return (x / this.graph.width) * (this.maxX - this.minX) + this.minX;
 	},
 	unscaleY: function (y) {
-		return (y / this.height) * (this.maxY - this.minY) + this.minY;
+		return (y / this.graph.height) * (this.maxY - this.minY) + this.minY;
 	}
 }
 

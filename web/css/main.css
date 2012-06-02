@@ -36,3 +36,20 @@ nav ul li:last-child:after {
 	max-width: 1200px;
 	margin: 0 auto;
 }
+
+.graph:not(.graph-fullscreen) {
+	border: 1px solid #dddddd;
+	height: 400px;
+	overflow: auto;
+}
+
+.graph.graph-fullscreen {
+	position: fixed;
+	z-index: 10000;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ffffff;
+	overflow: scroll;
+}
