@@ -1,3 +1,44 @@
+ColorHelper = {
+	hsvToRgb: function (h, s, v) {
+		  var h_i = Math.floor(h*6);
+		  var f = h*6 - h_i;
+		  var p = v * (1 - s);
+		  var q = v * (1 - f*s);
+		  var t = v * (1 - (1 - f) * s);
+		  
+		  var rgb = [];
+		  if (h_i == 0) rgb = [v, t, p];
+		  if (h_i == 1) rgb = [q, v, p];
+		  if (h_i == 2) rgb = [p, v, t];
+		  if (h_i == 3) rgb = [p, q, v];
+		  if (h_i == 4) rgb = [t, p, v];
+		  if (h_i == 5) rgb = [v, p, q];
+
+		  rgb = [Math.floor(rgb[0]*256), Math.floor(rgb[1]*256), Math.floor(rgb[2]*256), '#'];
+		  rgb[3] += rgb[0] < 16 ? '0' + rgb[0].toString(16) : rgb[0].toString(16);
+		  rgb[3] += rgb[1] < 16 ? '0' + rgb[1].toString(16) : rgb[1].toString(16);
+		  rgb[3] += rgb[2] < 16 ? '0' + rgb[2].toString(16) : rgb[2].toString(16);
+		  
+		  return rgb;
+	},
+	
+	colorList: function(n, s, v) {
+		var goldenRatioConjugate = 0.618033988749895;
+		var h = 0.1; //Math.random();
+
+		var colors = [];
+		
+		for (var i = 0; i < n; i++) {
+			h += goldenRatioConjugate;
+			h = h - Math.floor(h);
+			
+			colors.push(this.hsvToRgb(h, s, v));
+		}
+		
+		return colors;
+	}
+};
+
 Graph = function (element, width, height) {
 	var graph = this;
 	
@@ -51,6 +92,7 @@ Graph.prototype = {
 	
 	draw: function() {
 		var graph = this;
+		var colors = ColorHelper.colorList(25, 0.8, 0.99);
 		
 		$(graph.element).html('');
 		var canvas = Raphael(graph.element, graph.width, graph.height);
@@ -64,11 +106,12 @@ Graph.prototype = {
 			var y2 = graph.scale.scaleY(edge.target.positionY);
 			
 			var line = canvas.path('M' + x1 + ',' + y1 + 'L' + x2 + ',' + y2);
-			if (edge.options.highlighted) {
-				line.attr('stroke', '#ff0000');
+			line.attr({ 'stroke-width': 1 });
+			if (edge.options.type == 0) {
+				line.attr({ 'stroke-dasharray': '- ' });
 			}
 			
-			var text = canvas.text((x1 + x2) / 2.0, (y1 + y2) / 2.0, edge.options.label);
+			line.attr({ 'stroke': colors[edge.options.label][3], 'title': edge.options.label });
 		});
 		
 		$.each(this.vertices, function(id, vertex) {
@@ -77,9 +120,8 @@ Graph.prototype = {
 			var x = graph.scale.scaleX(vertex.positionX);
 			var y = graph.scale.scaleY(vertex.positionY);
 			
-			var rect = canvas.rect(x - 40, y - 10, 80, 20, 4);
-			rect.attr('fill', '#fff');
-			var text = canvas.text(x, y, vertex.options.label);
+			var circ = canvas.circle(x, y, 10);
+			circ.attr({ 'fill': '#ffffff', 'stroke': '#dddddd', 'stroke-width': 3, 'title': vertex.options.label });
 		});
 	},
 	
@@ -213,4 +255,3 @@ GraphScale.Linear.prototype = {
 		return (y / this.graph.height) * (this.maxY - this.minY) + this.minY;
 	}
 }
-

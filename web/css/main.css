@@ -39,7 +39,7 @@ nav > ul > li:last-child:after {
 
 .graph:not(.graph-fullscreen) {
 	border: 1px solid #dddddd;
-	height: 400px;
+	height: 600px;
 	overflow: auto;
 }
 

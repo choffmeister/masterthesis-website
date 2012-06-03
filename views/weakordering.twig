@@ -33,7 +33,7 @@ $(function () {
                 graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1] });
             });
             $.each(edges, function (i, e) {
-                graph.addEdge(vertices[e[0]][0], vertices[e[1]][0], { label: e[2] });
+                graph.addEdge(vertices[e[0]][0], vertices[e[1]][0], { label: e[2], type: e[3] });
             });
             
             var layoutGraph = function () {
