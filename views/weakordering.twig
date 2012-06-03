@@ -30,7 +30,28 @@ $(function () {
             
             var graph = new Graph($('#canvas')[0], 100, 100);
             $.each(vertices, function (i, v) {
-                vertex = graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1] });
+                graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1], click: function(vertex, event) {
+                    graph.walk(graph.vertices['e'], {
+                        vertexCallback: function (v) {
+                            v.options.opacity = 0.1;
+                        },
+                        edgeCallback: function (e) {
+                            e.options.opacity = 0.1;
+                        }
+                    });
+                    
+                    graph.walk(vertex, {
+                        direction: -1,
+                        vertexCallback: function (v) {
+                            v.options.opacity = 1.0;
+                        },
+                        edgeCallback: function (e) {
+                            e.options.opacity = 1.0;
+                        }
+                    });
+                    
+                    graph.draw();
+                }});
             });
             $.each(edges, function (i, e) {
                 graph.addEdge(vertices[e[0]][0], vertices[e[1]][0], { label: e[2], type: e[3] });

@@ -58,6 +58,7 @@ Graph.prototype = {
 	addVertex: function(id, options) {
 		options = $.extend({
 			label: id,
+			opacity: 1.0,
 			visible: true
 		}, options);
 		
@@ -71,6 +72,7 @@ Graph.prototype = {
 			label: '',
 			bending: 0,
 			directed: false,
+			opacity: 1.0,
 			visible: true
 		}, options);
 		
@@ -121,6 +123,7 @@ Graph.prototype = {
 			}
 			
 			line.attr({ 'stroke': colors[edge.options.label][3], 'title': edge.options.label });
+			line.attr({ 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
 		});
 		
 		$.each(this.vertices, function(id, vertex) {
@@ -131,6 +134,11 @@ Graph.prototype = {
 			
 			var circ = canvas.circle(x, y, 10);
 			circ.attr({ 'fill': '#ffffff', 'stroke': '#dddddd', 'stroke-width': 3, 'title': vertex.options.label });
+			circ.attr({ 'fill-opacity': vertex.options.opacity, 'stroke-opacity': vertex.options.opacity });
+
+			if (vertex.options.click) circ.click(function (event) {
+				vertex.options.click(vertex, event);
+			});
 		});
 	},
 	
@@ -165,14 +173,16 @@ Graph.prototype = {
 			
 			$.each(v.edges, function (i, e) {
 				if (options.direction == 1 && e.source != v) return;
-				if (options.direction == -11 && e.target != v) return;
+				if (options.direction == -1 && e.target != v) return;
 				if ($.inArray(e, walkedEdges) != -1) return;
 				walkedEdges.push(e);
 				
 				if (!options.edgeSelector(e)) return;
 				
 				options.edgeCallback(e);
-				stack.push(e.target);
+				
+				if (e.source == v) stack.push(e.target);
+				if (e.target == v) stack.push(e.source);
 			});
 		}
 	}
