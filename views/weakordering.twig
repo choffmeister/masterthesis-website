@@ -30,39 +30,13 @@ $(function () {
             
             var graph = new Graph($('#canvas')[0], 100, 100);
             $.each(vertices, function (i, v) {
-                graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1] });
+                vertex = graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1] });
             });
             $.each(edges, function (i, e) {
                 graph.addEdge(vertices[e[0]][0], vertices[e[1]][0], { label: e[2], type: e[3] });
             });
             
-            var layoutGraph = function () {
-                var levels = {};
-                var size = [0, 0];
-                
-                $.each(graph.vertices, function(i, v) {
-                    if (!levels[v.options.twistedLength]) {
-                        levels[v.options.twistedLength] = [];
-                    }
-
-                    levels[v.options.twistedLength].push(i);
-                    
-                    if (size[0] < levels[v.options.twistedLength].length) size[0] = levels[v.options.twistedLength].length;
-                    if (size[1] < v.options.twistedLength) size[1] = v.options.twistedLength;
-                });
-                
-                $.each(levels, function(twistedLength, vertexIndices) {
-                    $.each(vertexIndices, function (i, vertexIndex) {
-                        graph.vertices[vertexIndex].positionX = (size[0] - vertexIndices.length) / 2 + i;
-                        graph.vertices[vertexIndex].positionY = twistedLength;
-                	});
-                });
-
-                graph.width = size[0] * 150;
-                graph.height = size[1] * 150;
-                graph.scale = new GraphScale.Linear(graph, -1, size[0], -1, size[1] + 1);
-            };
-            layoutGraph();
+            GraphLayout.WeakOrdering.layout(graph);
             
             $.each(generators, function (i, g) {
                 var checkbox = $('<input type="checkbox" checked="checked" name="generators[]" value="' + (parseInt(g.replace(/s/g, '')) - 1) + '" />');
@@ -73,7 +47,7 @@ $(function () {
                     $("input[@name='generators[]']:checked").each(function() { selectedGenerators.push(parseInt($(this).val())); });
 
                     var subGraph = function (I) {
-                        graph.walk({
+                        graph.walk(graph.vertices["e"], {
                             vertexCallback: function (v) {
                                 v.hide();
                             },
@@ -82,7 +56,7 @@ $(function () {
                             }
                         });
                         
-                        graph.walk({
+                        graph.walk(graph.vertices["e"], {
                             edgeSelector: function (e) {
                                return $.inArray(e.options.label, I) != -1;
                             },

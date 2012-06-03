@@ -58,7 +58,6 @@ Graph.prototype = {
 	addVertex: function(id, options) {
 		options = $.extend({
 			label: id,
-			highlighted: false,
 			visible: true
 		}, options);
 		
@@ -70,8 +69,8 @@ Graph.prototype = {
 	addEdge: function(sourceVertexId, targetVertexId, options) {
 		options = $.extend({
 			label: '',
+			bending: 0,
 			directed: false,
-			highlighted: false,
 			visible: true
 		}, options);
 		
@@ -93,6 +92,7 @@ Graph.prototype = {
 	draw: function() {
 		var graph = this;
 		var colors = ColorHelper.colorList(25, 0.8, 0.99);
+		var doubleEdgeDiff = 10;
 		
 		$(graph.element).html('');
 		var canvas = Raphael(graph.element, graph.width, graph.height);
@@ -105,7 +105,16 @@ Graph.prototype = {
 			var x2 = graph.scale.scaleX(edge.target.positionX);
 			var y2 = graph.scale.scaleY(edge.target.positionY);
 			
-			var line = canvas.path('M' + x1 + ',' + y1 + 'L' + x2 + ',' + y2);
+			var nx = -(y2 - y1);
+			var ny = x2 - x1;
+			var tmp = Math.sqrt(nx*nx + ny*ny);
+			nx = nx / tmp;
+			ny = ny / tmp;
+			
+			var x3 = (x1 + x2) / 2.0 + nx * doubleEdgeDiff * edge.options.bending;
+			var y3 = (y1 + y2) / 2.0 + ny * doubleEdgeDiff * edge.options.bending;
+			
+			var line = canvas.path('M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
 			line.attr({ 'stroke-width': 1 });
 			if (edge.options.type == 0) {
 				line.attr({ 'stroke-dasharray': '- ' });
@@ -125,7 +134,7 @@ Graph.prototype = {
 		});
 	},
 	
-	walk: function(options) {
+	walk: function(startVertex, options) {
 		options = $.extend({
 			edgeSelector: function (e) {
 				return true;
@@ -136,33 +145,35 @@ Graph.prototype = {
 			edgeCallback: function (e) {
 			},
 			vertexCallback: function (v) {
-			}
+			},
+			direction: 1
 		}, options);
 		
 		var stack = new Array();
 		var walkedVertices = new Array();
 		var walkedEdges = new Array();
-		stack.push(this.vertices["e"]);
+		stack.push(startVertex);
 		
 		while (stack.length > 0) {
 			var v = stack.pop();
 			
-            if ($.inArray(v, walkedVertices) != -1) continue;
-            walkedVertices.push(v);
+			if ($.inArray(v, walkedVertices) != -1) continue;
+			walkedVertices.push(v);
 			
-        	if (!options.vertexSelector(v)) return;
-        	options.vertexCallback(v);
-            
-            $.each(v.edges, function (i, e) {
-                if (e.source != v) return;
-                if ($.inArray(e, walkedEdges) != -1) return;
-                walkedEdges.push(e);
-                
-                if (!options.edgeSelector(e)) return;
-                
-                options.edgeCallback(e);
-                stack.push(e.target);
-            });
+			if (!options.vertexSelector(v)) return;
+			options.vertexCallback(v);
+			
+			$.each(v.edges, function (i, e) {
+				if (options.direction == 1 && e.source != v) return;
+				if (options.direction == -11 && e.target != v) return;
+				if ($.inArray(e, walkedEdges) != -1) return;
+				walkedEdges.push(e);
+				
+				if (!options.edgeSelector(e)) return;
+				
+				options.edgeCallback(e);
+				stack.push(e.target);
+			});
 		}
 	}
 };
@@ -182,14 +193,6 @@ GraphVertex.prototype = {
 	
 	show: function () {
 		this.options.visible = true;
-	},
-	
-	unhighlight: function () {
-		this.options.highlighted = false;
-	},
-	
-	highlight: function () {
-		this.options.highlighted = true;
 	}
 };
 
@@ -206,14 +209,6 @@ GraphEdge.prototype = {
 	
 	show: function () {
 		this.options.visible = true;
-	},
-	
-	unhighlight: function () {
-		this.options.highlighted = false;
-	},
-	
-	highlight: function () {
-		this.options.highlighted = true;
 	}
 };
 
@@ -255,3 +250,44 @@ GraphScale.Linear.prototype = {
 		return (y / this.graph.height) * (this.maxY - this.minY) + this.minY;
 	}
 }
+
+GraphLayout = {};
+GraphLayout.WeakOrdering = {
+	layout: function (graph) {
+		var levels = {};
+		var size = [0, 0];
+		
+		var doubleEdges = [];
+		for (var i = 0; i < graph.edges.length - 1; i++) {
+			if (graph.edges[i].source == graph.edges[i + 1].source &&
+				graph.edges[i].target == graph.edges[i + 1].target)
+			{
+				console.log()
+				graph.edges[i].options.bending = -1;
+				graph.edges[i + 1].options.bending = 1;
+			}
+		}
+		
+		$.each(graph.vertices, function(i, v) {
+			if (!levels[v.options.twistedLength]) {
+				levels[v.options.twistedLength] = [];
+			}
+
+			levels[v.options.twistedLength].push(i);
+			
+			if (size[0] < levels[v.options.twistedLength].length) size[0] = levels[v.options.twistedLength].length;
+			if (size[1] < v.options.twistedLength) size[1] = v.options.twistedLength;
+		});
+		
+		$.each(levels, function(twistedLength, vertexIndices) {
+			$.each(vertexIndices, function (i, vertexIndex) {
+				graph.vertices[vertexIndex].positionX = (size[0] - vertexIndices.length) / 2 + i;
+				graph.vertices[vertexIndex].positionY = twistedLength;
+			});
+		});
+
+		graph.width = size[0] * 150;
+		graph.height = size[1] * 150;
+		graph.scale = new GraphScale.Linear(graph, -1, size[0]*2, -1, size[1] + 1);
+	}
+};
