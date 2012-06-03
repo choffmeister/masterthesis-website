@@ -296,8 +296,8 @@ GraphLayout.WeakOrdering = {
 			});
 		});
 
-		graph.width = size[0] * 150;
+		graph.width = size[0] * 75;
 		graph.height = size[1] * 150;
-		graph.scale = new GraphScale.Linear(graph, -1, size[0]*2, -1, size[1] + 1);
+		graph.scale = new GraphScale.Linear(graph, -1, size[0], -1, size[1] + 1);
 	}
 };
