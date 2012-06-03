@@ -98,7 +98,7 @@ $app->get('/weakordering/{groupId}/{automorphismId}/graph.json', function($group
         return new JsonResponse(false);
     }
 
-    return new JsonResponse(json_decode($weakOrdering['ordering']));
+    return new Response($weakOrdering['ordering'], 200, array('Content-type' => 'application/json'));
 });
 
 $app->get('/weakordering/{groupId}/{automorphismId}/graph.svg', function($groupId, $automorphismId) use($app) {
