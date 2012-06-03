@@ -120,6 +120,12 @@ $app->get('/weakordering/{groupId}/{automorphismId}/graph.svg', function($groupI
 $app->post('/api/v1/import', function(Request $request) use ($app) {
     $data = json_decode($request->getContent());
 
+    if ($request->get('flush') == '1') {
+        $app['db']->executeQuery('TRUNCATE weakorderings');
+        $app['db']->executeQuery('TRUNCATE automorphisms');
+        $app['db']->executeQuery('TRUNCATE groups');
+    }
+
     foreach ($data as $group) {
         $app['db']->insert('groups', array(
            'name' => $group[0],
