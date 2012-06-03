@@ -7,23 +7,24 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+$config = json_decode(file_get_contents(__DIR__.'/../config.json'), true);
 $app = new Silex\Application();
+if ($config['debug'] === true) {
+    $app['debug'] = true;
+    ini_set('display_errors', 1);
+} else {
+    $app['debug'] = false;
+    ini_set('display_errors', 0);
+}
+
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
     'twig.path' => __DIR__.'/../views',
 ));
 $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
-    'db.options' => array(
-        'driver' => 'pdo_mysql',
-        'host' => 'localhost',
-        'user' => 'root',
-        'password' => '',
-        'dbname' => 'coxeter',
-    ),
+    'db.options' => $config['db.options'],
     'db.dbal.class_path' => __DIR__.'/../vendor/doctrine-dbal/lib',
     'db.common.class_path' => __DIR__.'/../vendor/doctrine-common/lib',
 ));
-$app['debug'] = true;
-ini_set('display_errors', 1);
 
 $app->get('/', function() use($app) {
     return $app->redirect('/groups');
