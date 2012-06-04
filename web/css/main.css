@@ -67,7 +67,7 @@ nav > ul > li:last-child:after {
     z-index: 20000;
     left: 0;
     top: 0;
-    width: 120px;
+    width: 150px;
 }
 
 .workspace-controls > div {

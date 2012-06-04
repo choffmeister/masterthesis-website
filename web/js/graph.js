@@ -15,14 +15,6 @@ Graph = function (element) {
 Graph.prototype = {
 	zoomSpeed: 0.2,
 	panSpeed: 20.0,
-	
-	updateViewPort: function () {
-		var width = $(this.element).width();
-		var height = $(this.element).height();
-
-		this.canvas.setSize(width, height);
-		this.canvas.setViewBox(-(width*0.5 / this.zoom) - this.center[0], -(height*0.5 / this.zoom) - this.center[1], width / this.zoom, height / this.zoom); 
-	},
 
 	zoomIn: function () {
 		this.zoom *= (1.0 + this.zoomSpeed);
@@ -35,23 +27,60 @@ Graph.prototype = {
 	},
 	
 	panUp: function () {
-		this.center[1] -= this.panSpeed / this.zoom;
-		this.updateViewPort();
-	},
-
-	panDown: function () {
 		this.center[1] += this.panSpeed / this.zoom;
 		this.updateViewPort();
 	},
 
+	panDown: function () {
+		this.center[1] -= this.panSpeed / this.zoom;
+		this.updateViewPort();
+	},
+
 	panLeft: function () {
-		this.center[0] -= this.panSpeed / this.zoom;
+		this.center[0] += this.panSpeed / this.zoom;
 		this.updateViewPort();
 	},
 
 	panRight: function () {
-		this.center[0] += this.panSpeed / this.zoom;
+		this.center[0] -= this.panSpeed / this.zoom;
 		this.updateViewPort();
+	},
+	
+	resetViewPort: function () {
+		var bbox = [Infinity, -Infinity, Infinity, -Infinity];
+		
+		$.each(this.vertices, function (i, v) {
+			if (v.positionX < bbox[0]) bbox[0] = v.positionX;
+			if (v.positionX > bbox[1]) bbox[1] = v.positionX;
+			if (v.positionY < bbox[2]) bbox[2] = v.positionY;
+			if (v.positionY > bbox[3]) bbox[3] = v.positionY;
+		});
+		
+		bbox[0] -= 15.0;
+		bbox[1] += 15.0;
+		bbox[2] -= 15.0;
+		bbox[3] += 15.0;
+
+		this.center[0] = (bbox[0] + bbox[1]) / 2.0;
+		this.center[1] = (bbox[2] + bbox[3]) / 2.0;
+
+		var width = $(this.element).width();
+		var height = $(this.element).height();
+		
+		var zoom1 = width / (bbox[1] - bbox[0]);
+		var zoom2 = height / (bbox[3] - bbox[2]);
+		
+		this.zoom = Math.min(zoom1, zoom2);
+
+		this.updateViewPort();
+	},
+	
+	updateViewPort: function () {
+		var width = $(this.element).width();
+		var height = $(this.element).height();
+
+		this.canvas.setSize(width, height);
+		this.canvas.setViewBox(-(width*0.5 / this.zoom) + this.center[0], -(height*0.5 / this.zoom) + this.center[1], width / this.zoom, height / this.zoom); 
 	},
 
 	addVertex: function(id, options) {
@@ -281,51 +310,5 @@ GraphEdge.prototype = {
 		}
 		edge.element = line;
 		if (edge.options.visible != true) edge.element.hide();
-	}
-};
-
-GraphLayout = {};
-GraphLayout.WeakOrdering = {
-	layout: function (graph) {
-		var levels = {};
-		var size = [0, 0];
-		var edgeColors = {};
-		
-		var doubleEdges = [];
-		for (var i = 0; i < graph.edges.length - 1; i++) {
-			if (graph.edges[i].source == graph.edges[i + 1].source &&
-				graph.edges[i].target == graph.edges[i + 1].target)
-			{
-				console.log()
-				graph.edges[i].options.bending = -1;
-				graph.edges[i + 1].options.bending = 1;
-			}
-		}
-		
-		$.each(graph.vertices, function(i, v) {
-			if (!levels[v.options.twistedLength]) {
-				levels[v.options.twistedLength] = [];
-			}
-
-			levels[v.options.twistedLength].push(i);
-			
-			if (size[0] < levels[v.options.twistedLength].length) size[0] = levels[v.options.twistedLength].length;
-			if (size[1] < v.options.twistedLength) size[1] = v.options.twistedLength;
-		});
-		
-		$.each(levels, function(twistedLength, vertexIndices) {
-			$.each(vertexIndices, function (i, vertexIndex) {
-				graph.vertices[vertexIndex].positionX = parseFloat((size[0] - vertexIndices.length) / 2 - (size[0] - 1) / 2 + i) * 75;
-				graph.vertices[vertexIndex].positionY = parseFloat(twistedLength) * 150;
-			});
-		});
-		
-		$.each(graph.edges, function(i, e) {
-			if (!edgeColors[e.options.label]) {
-				edgeColors[e.options.label] = Raphael.getColor(0.99);
-			}
-			
-			e.options.color = edgeColors[e.options.label];
-		});
 	}
 };

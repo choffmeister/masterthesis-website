@@ -13,20 +13,10 @@ $
 {% block content %}
 <div id="workspace" class="workspace">
     <div id="controls" class="workspace-controls">
-       <div>
-           {% spaceless %}
-           <button class="btn" id="fullscreen">Fullscreen</button>
-           <button class="btn" id="zoomin" style="width: 50%;">+</button>
-           <button class="btn" id="zoomout" style="width: 50%;">-</button>
-           <button class="btn" id="panup" style="width: 50%;">⇡</button>
-           <button class="btn" id="pandown" style="width: 50%;">⇣</button>
-           <button class="btn" id="panleft" style="width: 50%;">⇠</button>
-           <button class="btn" id="panright" style="width: 50%;">⇢</button>
-           {% endspaceless %}
-       </div>
-       <div>
-           <button class="btn" id="unhide">Unhide</button>
-       </div>
+        <div>
+            <button class="btn" data-workspace-bind="reset">Reset positions</button>
+            <button class="btn" data-workspace-bind="unhide">Unhide all nodes</button>
+        </div>
     </div>
     <div id="content" class="workspace-content">
        <div id="canvas"></div>
@@ -49,6 +39,25 @@ $(function () {
 
             var graph = new Graph($('#canvas')[0]);
 
+            $('#workspace').workspace({
+                toggleFullscreen: function () { graph.updateViewPort(); },
+                resetViewPort: function () { graph.resetViewPort(); },
+                zoomIn: function () { graph.zoomIn(); },
+                zoomOut: function () { graph.zoomOut(); },
+                panUp: function () { graph.panUp(); },
+                panDown: function () { graph.panDown(); },
+                panLeft: function () { graph.panLeft(); },
+                panRight: function () { graph.panRight(); },
+
+                reset: function () {
+                	GraphLayout.WeakOrdering.layout(graph);
+                	graph.draw();
+                },
+                unhide: function () {
+                    graph.showAll();
+                }
+            })
+
             $.each(vertices, function (i, v) {
                 graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1], click: function(vertex, event) {
                     if (event.ctrlKey) {
@@ -60,7 +69,7 @@ $(function () {
                             edgeCallback: function (e) { e.show(); }
                         });
                     }
-                    
+
                     if (event.shiftKey) {
                         graph.hideAll();
 
@@ -77,97 +86,8 @@ $(function () {
             });
 
             GraphLayout.WeakOrdering.layout(graph);
-
-            var generatorsControl = $('<div></div>');
-            $.each(generators, function (i, g) {
-                var checkbox = $('<input type="checkbox" checked="checked" name="generators[]" value="' + (parseInt(g.replace(/s/g, '')) - 1) + '" />');
-
-                checkbox.change(function () {
-
-                    var selectedGenerators = new Array();
-                    $("input[@name='generators[]']:checked").each(function() { selectedGenerators.push(parseInt($(this).val())); });
-
-                    var subGraph = function (I) {
-                        graph.hideAll();
-
-                        graph.walk(graph.vertices["e"], {
-                            edgeSelector: function (e) {
-                               return $.inArray(e.options.label, I) != -1;
-                            },
-                            vertexCallback: function (v) {
-                                v.show();
-                            },
-                            edgeCallback: function (e) {
-                                e.show();
-                            }
-                        });
-                    };
-
-                    subGraph(selectedGenerators);
-                });
-
-                generatorsControl.append('<div>').append(checkbox).append(' ' + g).append('</div>');
-            });
-
-            $('#controls').append(generatorsControl);
-            $('#fullscreen').click(function () {
-                $('#workspace').toggleClass('workspace-fullscreen');
-                graph.updateViewPort();
-            });
-
-            $('#zoomin').click(function () { graph.zoomIn(); });
-            $('#zoomout').click(function () { graph.zoomOut(); });
-            $('#panup').click(function () { graph.panUp(); });
-            $('#pandown').click(function () { graph.panDown(); });
-            $('#panleft').click(function () { graph.panLeft(); });
-            $('#panright').click(function () { graph.panRight(); });
-
-            $(document).bind('keydown', function (event) {
-                switch (event.keyCode) {
-                    case 13:
-                        if (event.ctrlKey) {
-                            $('#workspace').toggleClass('workspace-fullscreen');
-                            graph.updateViewPort();
-                        }
-                        return;
-                    case 38:
-                        graph.panUp();
-                        return;
-                    case 40:
-                        graph.panDown();
-                        return;
-                    case 37:
-                        graph.panLeft();
-                        return;
-                    case 39:
-                        graph.panRight();
-                        return;
-                    case 107:
-                        graph.zoomIn();
-                        return;
-                    case 109:
-                        graph.zoomOut();
-                        return;
-                }
-            });
+            graph.resetViewPort();
             
-            $('#canvas').bind('mousewheel', function (event) {
-                var delta = event.originalEvent.wheelDelta;
-
-                if (delta > 0) {
-                    graph.zoomIn();
-                } else {
-                    graph.zoomOut();
-                }
-
-                return false;
-            });
-
-            $('#unhide').click(function () {
-                $("input[@name='generators[]']:not(checked)").attr('checked', 'checked');
-                graph.showAll();
-            });
-
             console.log(graph);
             graph.draw();
         },
