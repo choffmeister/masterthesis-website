@@ -14,13 +14,15 @@ $
 <div id="workspace" class="workspace">
     <div id="controls" class="workspace-controls">
        <div>
+           {% spaceless %}
            <button id="fullscreen">Fullscreen</button>
-           <button id="zoomin">+</button>
-           <button id="zoomout">-</button>
-           <button id="panup">⇡</button>
-           <button id="pandown">⇣</button>
-           <button id="panleft">⇠</button>
-           <button id="panright">⇢</button>
+           <button id="zoomin" style="width: 50%;">+</button>
+           <button id="zoomout" style="width: 50%;">-</button>
+           <button id="panup" style="width: 25%;">⇡</button>
+           <button id="pandown" style="width: 25%;">⇣</button>
+           <button id="panleft" style="width: 25%;">⇠</button>
+           <button id="panright" style="width: 25%;">⇢</button>
+           {% endspaceless %}
        </div>
        <div>
            <button id="unhide">Unhide</button>
@@ -122,24 +124,30 @@ $(function () {
 
             $(document).bind('keydown', function (event) {
                 switch (event.keyCode) {
-                   case 38:
-                       graph.panUp();
-                       return;
-                   case 40:
-                       graph.panDown();
-                       return;
-                   case 37:
-                       graph.panLeft();
-                       return;
-                   case 39:
-                       graph.panRight();
-                       return;
-                   case 107:
-                       graph.zoomIn();
-                       return;
-                   case 109:
-                       graph.zoomOut();
-                       return;
+                    case 13:
+                        if (event.ctrlKey) {
+                            $('#workspace').toggleClass('workspace-fullscreen');
+                            graph.updateViewPort();
+                        }
+                        return;
+                    case 38:
+                        graph.panUp();
+                        return;
+                    case 40:
+                        graph.panDown();
+                        return;
+                    case 37:
+                        graph.panLeft();
+                        return;
+                    case 39:
+                        graph.panRight();
+                        return;
+                    case 107:
+                        graph.zoomIn();
+                        return;
+                    case 109:
+                        graph.zoomOut();
+                        return;
                 }
             });
             

@@ -249,7 +249,6 @@ GraphEdge.prototype = {
 		var edge = this;
 		var graph = edge.graph;
 		var canvas = graph.canvas;
-		var colors = ColorHelper.colorList(25, 0.8, 0.99);
 
 		var x1 = graph.scale.scaleX(edge.source.positionX);
 		var y1 = graph.scale.scaleY(edge.source.positionY);
@@ -273,13 +272,13 @@ GraphEdge.prototype = {
 
 		line.attr('path', 'M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
 		line.attr({ 'stroke-width': 1 });
+		line.attr({ 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
 		if (edge.options.type == 0) {
 			line.attr({ 'stroke-dasharray': '- ' });
 		}
-
-		line.attr({ 'stroke': colors[edge.options.label][3], 'title': edge.options.label });
-		line.attr({ 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
-
+		if (edge.options.color) {
+			line.attr({ 'stroke': edge.options.color });
+		}
 		edge.element = line;
 		if (edge.options.visible != true) edge.element.hide();
 	}
@@ -290,6 +289,7 @@ GraphLayout.WeakOrdering = {
 	layout: function (graph) {
 		var levels = {};
 		var size = [0, 0];
+		var edgeColors = {};
 		
 		var doubleEdges = [];
 		for (var i = 0; i < graph.edges.length - 1; i++) {
@@ -318,6 +318,14 @@ GraphLayout.WeakOrdering = {
 				graph.vertices[vertexIndex].positionX = parseFloat((size[0] - vertexIndices.length) / 2 - (size[0] - 1) / 2 + i) * 75;
 				graph.vertices[vertexIndex].positionY = parseFloat(twistedLength) * 150;
 			});
+		});
+		
+		$.each(graph.edges, function(i, e) {
+			if (!edgeColors[e.options.label]) {
+				edgeColors[e.options.label] = Raphael.getColor(0.99);
+			}
+			
+			e.options.color = edgeColors[e.options.label];
 		});
 	}
 };
