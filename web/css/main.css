@@ -37,19 +37,61 @@ nav > ul > li:last-child:after {
 	margin: 0 auto;
 }
 
-.graph:not(.graph-fullscreen) {
-	border: 1px solid #dddddd;
-	height: 600px;
-	overflow: auto;
+.workspace {
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-ms-user-select: none;
+	position: relative;
+	overflow: hidden;
+	background-color: #fcfcfc;
 }
 
-.graph.graph-fullscreen {
+.workspace:not(.workspace-fullscreen) {
+	position: relative;
+	border: 1px solid #dddddd;
+	height: 600px;
+}
+
+.workspace.workspace-fullscreen {
 	position: fixed;
 	z-index: 10000;
 	left: 0;
 	top: 0;
 	right: 0;
 	bottom: 0;
+}
+
+.workspace .workspace-controls {
+    position: absolute;
+    z-index: 20000;
+    left: 0;
+    top: 0;
+    width: 120px;
+}
+
+.workspace-controls > div {
+	border: 1px solid #dddddd;
+	border-radius: 3px;
+	padding: 5px;
+    background-color: #fff;
+}
+
+.workspace-controls > div > button {
+    width: 100%;
+}
+
+.workspace .workspace-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+    text-align: center;
+}
+
+#canvas {
+	display: inline-block;
 	background-color: #ffffff;
-	overflow: scroll;
 }

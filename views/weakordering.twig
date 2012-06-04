@@ -11,8 +11,17 @@ $
 {% endblock %}
 
 {% block content %}
-<div id="generators">Double click graph to switch fullscreen. </div>
-<div id="canvas" class="graph"></div>
+<div id="workspace" class="workspace">
+    <div id="controls" class="workspace-controls">
+       <div>
+           <button id="fullscreen" onclick="$('#workspace').toggleClass('workspace-fullscreen');">Fullscreen</button>
+           <button id="unhide">Unhide</button>
+       </div>
+    </div>
+    <div id="content" class="workspace-content">
+       <div id="canvas"></div>
+    </div>
+</div>
 <script type="text/javascript">
 $(function () {
     $.ajax('/weakordering/{{ group.id }}/{{ automorphism.id }}/graph.json', {
@@ -23,47 +32,48 @@ $(function () {
                 $('#canvas').html('Weak ordering has not been calculated yet!');
                 return;
             }
-            
+
             var generators = data[0];
             var vertices = data[1];
             var edges = data[2];
-            
+
             var graph = new Graph($('#canvas')[0], 100, 100);
+
             $.each(vertices, function (i, v) {
                 graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1], click: function(vertex, event) {
-                    graph.walk(graph.vertices['e'], {
-                        vertexCallback: function (v) {
-                            v.options.opacity = 0.1;
-                        },
-                        edgeCallback: function (e) {
-                            e.options.opacity = 0.1;
-                        }
-                    });
+                    if (event.ctrlKey) {
+                        graph.hideAll();
+
+                        graph.walk(vertex, {
+                            direction: -1,
+                            vertexCallback: function (v) { v.show(); },
+                            edgeCallback: function (e) { e.show(); }
+                        });
+                    }
                     
-                    graph.walk(vertex, {
-                        direction: -1,
-                        vertexCallback: function (v) {
-                            v.options.opacity = 1.0;
-                        },
-                        edgeCallback: function (e) {
-                            e.options.opacity = 1.0;
-                        }
-                    });
-                    
-                    graph.draw();
+                    if (event.shiftKey) {
+                        graph.hideAll();
+
+                        graph.walk(vertex, {
+                            direction: 1,
+                            vertexCallback: function (v) { v.show(); },
+                            edgeCallback: function (e) { e.show(); }
+                        });
+                    }
                 }});
             });
             $.each(edges, function (i, e) {
                 graph.addEdge(vertices[e[0]][0], vertices[e[1]][0], { label: e[2], type: e[3] });
             });
-            
+
             GraphLayout.WeakOrdering.layout(graph);
-            
+
+            var generatorsControl = $('<div></div>');
             $.each(generators, function (i, g) {
                 var checkbox = $('<input type="checkbox" checked="checked" name="generators[]" value="' + (parseInt(g.replace(/s/g, '')) - 1) + '" />');
-                
+
                 checkbox.change(function () {
-                    
+
                     var selectedGenerators = new Array();
                     $("input[@name='generators[]']:checked").each(function() { selectedGenerators.push(parseInt($(this).val())); });
 
@@ -76,7 +86,7 @@ $(function () {
                                 e.hide();
                             }
                         });
-                        
+
                         graph.walk(graph.vertices["e"], {
                             edgeSelector: function (e) {
                                return $.inArray(e.options.label, I) != -1;
@@ -91,12 +101,13 @@ $(function () {
                     };
 
                     subGraph(selectedGenerators);
-                    graph.draw();
                 });
-                
-                $('#generators').append(checkbox).append(' ' + g);
+
+                generatorsControl.append('<div>').append(checkbox).append(' ' + g).append('</div>');
             });
-            
+            $('#controls').append(generatorsControl);
+            $('#unhide').click(function () { graph.showAll(); $("input[@name='generators[]']:not(checked)").attr('checked', 'checked'); });
+
             console.log(graph);
             graph.draw();
         },

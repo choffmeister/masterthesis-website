@@ -1,57 +1,13 @@
-ColorHelper = {
-	hsvToRgb: function (h, s, v) {
-		  var h_i = Math.floor(h*6);
-		  var f = h*6 - h_i;
-		  var p = v * (1 - s);
-		  var q = v * (1 - f*s);
-		  var t = v * (1 - (1 - f) * s);
-		  
-		  var rgb = [];
-		  if (h_i == 0) rgb = [v, t, p];
-		  if (h_i == 1) rgb = [q, v, p];
-		  if (h_i == 2) rgb = [p, v, t];
-		  if (h_i == 3) rgb = [p, q, v];
-		  if (h_i == 4) rgb = [t, p, v];
-		  if (h_i == 5) rgb = [v, p, q];
-
-		  rgb = [Math.floor(rgb[0]*256), Math.floor(rgb[1]*256), Math.floor(rgb[2]*256), '#'];
-		  rgb[3] += rgb[0] < 16 ? '0' + rgb[0].toString(16) : rgb[0].toString(16);
-		  rgb[3] += rgb[1] < 16 ? '0' + rgb[1].toString(16) : rgb[1].toString(16);
-		  rgb[3] += rgb[2] < 16 ? '0' + rgb[2].toString(16) : rgb[2].toString(16);
-		  
-		  return rgb;
-	},
-	
-	colorList: function(n, s, v) {
-		var goldenRatioConjugate = 0.618033988749895;
-		var h = 0.1; //Math.random();
-
-		var colors = [];
-		
-		for (var i = 0; i < n; i++) {
-			h += goldenRatioConjugate;
-			h = h - Math.floor(h);
-			
-			colors.push(this.hsvToRgb(h, s, v));
-		}
-		
-		return colors;
-	}
-};
-
 Graph = function (element, width, height) {
 	var graph = this;
 	
 	graph.element = element;
 	graph.width = width;
 	graph.height = height;
+	graph.canvas = Raphael(graph.element, graph.width, graph.height);
 	graph.vertices = {};
 	graph.edges = [];
 	graph.scale = new GraphScale.Linear(graph, 0, 100, 0, 100);
-	
-	$(graph.element).dblclick(function () {
-		$(graph.element).toggleClass('graph-fullscreen');
-	});
 };
 
 Graph.prototype = {
@@ -62,7 +18,7 @@ Graph.prototype = {
 			visible: true
 		}, options);
 		
-		var vertex = new GraphVertex(id, options);
+		var vertex = new GraphVertex(this, id, options);
 		this.vertices[id] = vertex;
 		return vertex;
 	},
@@ -84,62 +40,28 @@ Graph.prototype = {
 		if (!target)
 			throw 'Unknown vertex id \'' + targetVertexId + '\'';
 		
-		var edge = new GraphEdge(source, target, options);
+		var edge = new GraphEdge(this, source, target, options);
 		this.edges.push(edge);
 		source.edges.push(edge);
 		target.edges.push(edge);
 		return edge;
 	},
-	
+
+	showAll: function() {
+		$.each(this.edges, function (i, edge) { edge.show(); });
+		$.each(this.vertices, function (i, vertex) { vertex.show(); });
+	},
+
+	hideAll: function() {
+		$.each(this.edges, function (i, edge) { edge.hide(); });
+		$.each(this.vertices, function (i, vertex) { vertex.hide(); });
+	},
+
 	draw: function() {
 		var graph = this;
-		var colors = ColorHelper.colorList(25, 0.8, 0.99);
-		var doubleEdgeDiff = 10;
 		
-		$(graph.element).html('');
-		var canvas = Raphael(graph.element, graph.width, graph.height);
-		
-		$.each(this.edges, function(i, edge) {
-			if (!edge.options.visible || !edge.source.options.visible || !edge.target.options.visible) return;
-
-			var x1 = graph.scale.scaleX(edge.source.positionX);
-			var y1 = graph.scale.scaleY(edge.source.positionY);
-			var x2 = graph.scale.scaleX(edge.target.positionX);
-			var y2 = graph.scale.scaleY(edge.target.positionY);
-			
-			var nx = -(y2 - y1);
-			var ny = x2 - x1;
-			var tmp = Math.sqrt(nx*nx + ny*ny);
-			nx = nx / tmp;
-			ny = ny / tmp;
-			
-			var x3 = (x1 + x2) / 2.0 + nx * doubleEdgeDiff * edge.options.bending;
-			var y3 = (y1 + y2) / 2.0 + ny * doubleEdgeDiff * edge.options.bending;
-			
-			var line = canvas.path('M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
-			line.attr({ 'stroke-width': 1 });
-			if (edge.options.type == 0) {
-				line.attr({ 'stroke-dasharray': '- ' });
-			}
-			
-			line.attr({ 'stroke': colors[edge.options.label][3], 'title': edge.options.label });
-			line.attr({ 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
-		});
-		
-		$.each(this.vertices, function(id, vertex) {
-			if (!vertex.options.visible) return;
-			
-			var x = graph.scale.scaleX(vertex.positionX);
-			var y = graph.scale.scaleY(vertex.positionY);
-			
-			var circ = canvas.circle(x, y, 10);
-			circ.attr({ 'fill': '#ffffff', 'stroke': '#dddddd', 'stroke-width': 3, 'title': vertex.options.label });
-			circ.attr({ 'fill-opacity': vertex.options.opacity, 'stroke-opacity': vertex.options.opacity });
-
-			if (vertex.options.click) circ.click(function (event) {
-				vertex.options.click(vertex, event);
-			});
-		});
+		$.each(this.edges, function(i, edge) { edge.draw(); });
+		$.each(this.vertices, function(id, vertex) { vertex.draw(); });
 	},
 	
 	walk: function(startVertex, options) {
@@ -188,78 +110,137 @@ Graph.prototype = {
 	}
 };
 
-GraphVertex = function (id, options) {
+GraphVertex = function (graph, id, options) {
+	this.graph = graph;
 	this.id = id;
 	this.positionX = 0.0;
 	this.positionY = 0.0;
 	this.edges = [];
 	this.options = options;
+	this.element = null;
 };
 
 GraphVertex.prototype = {
 	hide: function () {
 		this.options.visible = false;
+
+		if (this.element != null) {
+			this.element.hide();
+		}
 	},
-	
+
 	show: function () {
 		this.options.visible = true;
+		
+		if (this.element != null) {
+			this.element.show();
+		}
+	},
+
+	draw: function () {
+		var vertex = this;
+		var graph = vertex.graph;
+		var canvas = graph.canvas;
+
+		var x = graph.scale.scaleX(vertex.positionX);
+		var y = graph.scale.scaleY(vertex.positionY);
+
+		var circ = vertex.element;
+		
+		if (circ == null) {
+			circ = canvas.circle(x, y, 10);
+
+			if (vertex.options.click) circ.click(function (event) {
+				vertex.options.click(vertex, event);
+			});
+			
+			var startX = 0;
+			var startY = 0;
+			circ.drag(function (dx, dy) {
+				vertex.positionX = graph.scale.unscaleX(startX + dx);
+				vertex.positionY = graph.scale.unscaleY(startY + dy);
+				vertex.draw();
+				
+				$.each(vertex.edges, function (i, e) { e.draw(); });
+			}, function () {
+				startX = graph.scale.scaleX(vertex.positionX);
+				startY = graph.scale.scaleY(vertex.positionY);
+			});
+
+			vertex.element = circ;
+			if (vertex.options.visible != true) vertex.element.hide();
+		}
+		
+		circ.attr({ 'cx': x, 'cy': y });
+		circ.attr({ 'fill': '#ffffff', 'stroke': '#dddddd', 'stroke-width': 3, 'title': vertex.options.label });
+		circ.attr({ 'fill-opacity': vertex.options.opacity, 'stroke-opacity': vertex.options.opacity });
 	}
 };
 
-GraphEdge = function (sourceVertex, targetVertex, options) {
+GraphEdge = function (graph, sourceVertex, targetVertex, options) {
+	this.graph = graph;
 	this.source = sourceVertex;
 	this.target = targetVertex;
 	this.options = options;
+	this.element = null;
 };
 
 GraphEdge.prototype = {
 	hide: function () {
 		this.options.visible = false;
+
+		if (this.element != null) {
+			this.element.hide();
+		}
 	},
-	
+
 	show: function () {
 		this.options.visible = true;
+		
+		if (this.element != null) {
+			this.element.show();
+		}
+	},
+
+	draw: function () {
+		var edge = this;
+		var graph = edge.graph;
+		var canvas = graph.canvas;
+		var colors = ColorHelper.colorList(25, 0.8, 0.99);
+
+		var x1 = graph.scale.scaleX(edge.source.positionX);
+		var y1 = graph.scale.scaleY(edge.source.positionY);
+		var x2 = graph.scale.scaleX(edge.target.positionX);
+		var y2 = graph.scale.scaleY(edge.target.positionY);
+		
+		var nx = -(y2 - y1);
+		var ny = x2 - x1;
+		var tmp = Math.sqrt(nx*nx + ny*ny);
+		nx = nx / tmp;
+		ny = ny / tmp;
+
+		var x3 = (x1 + x2) / 2.0 + nx * 10 * edge.options.bending;
+		var y3 = (y1 + y2) / 2.0 + ny * 10 * edge.options.bending;
+
+		var line = edge.element;
+		
+		if (line == null) {
+			var line = canvas.path('M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
+		}
+
+		line.attr('path', 'M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
+		line.attr({ 'stroke-width': 1 });
+		if (edge.options.type == 0) {
+			line.attr({ 'stroke-dasharray': '- ' });
+		}
+
+		line.attr({ 'stroke': colors[edge.options.label][3], 'title': edge.options.label });
+		line.attr({ 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
+
+		edge.element = line;
+		if (edge.options.visible != true) edge.element.hide();
 	}
 };
-
-GraphScale = {};
-GraphScale.Linear = function(graph, minX, maxX, minY, maxY) {
-	this.graph = graph;
-	this.minX = minX;
-	this.maxX = maxX;
-	this.minY = minY;
-	this.maxY = maxY;
-	
-	if (maxX < minX)
-		throw 'Maximal X cannot be smaller than minimal X';
-	if (maxY < minY)
-		throw 'Maximal Y cannot be smaller than minimal Y';
-	
-	if (minX == maxX) {
-		minX -= 0.0001;
-		maxX += 0.0001;
-	}
-	
-	if (minY == maxY) {
-		minY -= 0.0001;
-		maxX += 0.0001;
-	}
-};
-
-GraphScale.Linear.prototype = {
-	scaleX: function (x) {
-		return (x - this.minX) / (this.maxX - this.minX) * this.graph.width;
-	},
-	scaleY: function (y) {
-		return (y - this.minY) / (this.maxY - this.minY) * this.graph.height;
-	},
-	unscaleX: function (x) {
-		return (x / this.graph.width) * (this.maxX - this.minX) + this.minX;
-	},
-	unscaleY: function (y) {
-		return (y / this.graph.height) * (this.maxY - this.minY) + this.minY;
-	}
-}
 
 GraphLayout = {};
 GraphLayout.WeakOrdering = {
@@ -298,6 +279,7 @@ GraphLayout.WeakOrdering = {
 
 		graph.width = size[0] * 75;
 		graph.height = size[1] * 150;
+		graph.canvas.setSize(graph.width, graph.height);
 		graph.scale = new GraphScale.Linear(graph, -1, size[0], -1, size[1] + 1);
 	}
 };
