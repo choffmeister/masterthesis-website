@@ -102,22 +102,6 @@ $app->get('/weakordering/{groupId}/{automorphismId}/graph.json', function($group
     return new Response($weakOrdering['ordering'], 200, array('Content-type' => 'application/json'));
 });
 
-$app->get('/weakordering/{groupId}/{automorphismId}/graph.svg', function($groupId, $automorphismId) use($app) {
-    $weakOrdering = $app['db']->fetchAssoc('SELECT * FROM weakorderings WHERE group_id = ? AND automorphism_id = ?', array($groupId, $automorphismId));
-
-    if (!$weakOrdering) {
-        return new Response('<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="300" height="100">' .
-            '<rect x="0" y="0" width="300" height="100" stroke="black" stroke-width="1" fill="white" />' .
-            '<text x="150" y="50" style="text-anchor: middle; dominant-baseline: central;">Graph has not been calculated yet.</text>' .
-            '</svg>',
-            200, array('Content-type' => 'image/svg+xml'));
-    }
-
-    $weakOrderingGraph = new \Coxeter\WeakOrderingGraph(json_decode($weakOrdering['ordering']));
-
-    return new Response($weakOrderingGraph->toSvg(), 200, array('Content-type' => 'image/svg+xml'));
-});
-
 $app->post('/api/v1/import', function(Request $request) use ($app) {
     $data = json_decode($request->getContent());
 
