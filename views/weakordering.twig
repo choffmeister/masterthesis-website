@@ -14,7 +14,15 @@ $
 <div id="workspace" class="workspace">
     <div id="controls" class="workspace-controls">
        <div>
-           <button id="fullscreen" onclick="$('#workspace').toggleClass('workspace-fullscreen');">Fullscreen</button>
+           <button id="fullscreen">Fullscreen</button>
+           <button id="zoomin">+</button>
+           <button id="zoomout">-</button>
+           <button id="panup">⇡</button>
+           <button id="pandown">⇣</button>
+           <button id="panleft">⇠</button>
+           <button id="panright">⇢</button>
+       </div>
+       <div>
            <button id="unhide">Unhide</button>
        </div>
     </div>
@@ -37,7 +45,7 @@ $(function () {
             var vertices = data[1];
             var edges = data[2];
 
-            var graph = new Graph($('#canvas')[0], 100, 100);
+            var graph = new Graph($('#canvas')[0]);
 
             $.each(vertices, function (i, v) {
                 graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1], click: function(vertex, event) {
@@ -78,14 +86,7 @@ $(function () {
                     $("input[@name='generators[]']:checked").each(function() { selectedGenerators.push(parseInt($(this).val())); });
 
                     var subGraph = function (I) {
-                        graph.walk(graph.vertices["e"], {
-                            vertexCallback: function (v) {
-                                v.hide();
-                            },
-                            edgeCallback: function (e) {
-                                e.hide();
-                            }
-                        });
+                        graph.hideAll();
 
                         graph.walk(graph.vertices["e"], {
                             edgeSelector: function (e) {
@@ -105,8 +106,47 @@ $(function () {
 
                 generatorsControl.append('<div>').append(checkbox).append(' ' + g).append('</div>');
             });
+
             $('#controls').append(generatorsControl);
-            $('#unhide').click(function () { graph.showAll(); $("input[@name='generators[]']:not(checked)").attr('checked', 'checked'); });
+            $('#fullscreen').click(function () {
+                $('#workspace').toggleClass('workspace-fullscreen');
+                graph.updateViewPort();
+            });
+
+            $('#zoomin').click(function () { graph.zoomIn(); });
+            $('#zoomout').click(function () { graph.zoomOut(); });
+            $('#panup').click(function () { graph.panUp(); });
+            $('#pandown').click(function () { graph.panDown(); });
+            $('#panleft').click(function () { graph.panLeft(); });
+            $('#panright').click(function () { graph.panRight(); });
+
+            $(document).bind('keydown', function (event) {
+                switch (event.keyCode) {
+                   case 38:
+                       graph.panUp();
+                       return;
+                   case 40:
+                       graph.panDown();
+                       return;
+                   case 37:
+                       graph.panLeft();
+                       return;
+                   case 39:
+                       graph.panRight();
+                       return;
+                   case 107:
+                       graph.zoomIn();
+                       return;
+                   case 109:
+                       graph.zoomOut();
+                       return;
+                }
+            });
+
+            $('#unhide').click(function () {
+                $("input[@name='generators[]']:not(checked)").attr('checked', 'checked');
+                graph.showAll();
+            });
 
             console.log(graph);
             graph.draw();

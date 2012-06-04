@@ -1,16 +1,59 @@
-Graph = function (element, width, height) {
+Graph = function (element) {
 	var graph = this;
 	
 	graph.element = element;
-	graph.width = width;
-	graph.height = height;
-	graph.canvas = Raphael(graph.element, graph.width, graph.height);
+	graph.canvas = Raphael(graph.element);
 	graph.vertices = {};
 	graph.edges = [];
-	graph.scale = new GraphScale.Linear(graph, 0, 100, 0, 100);
+	graph.scale = new GraphScale.None();
+	
+	graph.zoom = 1.0;
+	graph.center = [0.0, 0.0];
+	graph.updateViewPort();
 };
 
 Graph.prototype = {
+	zoomSpeed: 0.2,
+	panSpeed: 20.0,
+	
+	updateViewPort: function () {
+		var width = $(this.element).width();
+		var height = $(this.element).height();
+
+		this.canvas.setSize(width, height);
+		this.canvas.setViewBox(-(width*0.5 / this.zoom) - this.center[0], -(height*0.5 / this.zoom) - this.center[1], width / this.zoom, height / this.zoom); 
+	},
+
+	zoomIn: function () {
+		this.zoom *= (1.0 + this.zoomSpeed);
+		this.updateViewPort();
+	},
+
+	zoomOut: function () {
+		this.zoom /= (1.0 + this.zoomSpeed);
+		this.updateViewPort();
+	},
+	
+	panUp: function () {
+		this.center[1] -= this.panSpeed / this.zoom;
+		this.updateViewPort();
+	},
+
+	panDown: function () {
+		this.center[1] += this.panSpeed / this.zoom;
+		this.updateViewPort();
+	},
+
+	panLeft: function () {
+		this.center[0] -= this.panSpeed / this.zoom;
+		this.updateViewPort();
+	},
+
+	panRight: function () {
+		this.center[0] += this.panSpeed / this.zoom;
+		this.updateViewPort();
+	},
+
 	addVertex: function(id, options) {
 		options = $.extend({
 			label: id,
@@ -157,8 +200,8 @@ GraphVertex.prototype = {
 			var startX = 0;
 			var startY = 0;
 			circ.drag(function (dx, dy) {
-				vertex.positionX = graph.scale.unscaleX(startX + dx);
-				vertex.positionY = graph.scale.unscaleY(startY + dy);
+				vertex.positionX = graph.scale.unscaleX(startX + dx / graph.zoom);
+				vertex.positionY = graph.scale.unscaleY(startY + dy / graph.zoom);
 				vertex.draw();
 				
 				$.each(vertex.edges, function (i, e) { e.draw(); });
@@ -272,14 +315,9 @@ GraphLayout.WeakOrdering = {
 		
 		$.each(levels, function(twistedLength, vertexIndices) {
 			$.each(vertexIndices, function (i, vertexIndex) {
-				graph.vertices[vertexIndex].positionX = (size[0] - vertexIndices.length) / 2 + i;
-				graph.vertices[vertexIndex].positionY = twistedLength;
+				graph.vertices[vertexIndex].positionX = parseFloat((size[0] - vertexIndices.length) / 2 - (size[0] - 1) / 2 + i) * 75;
+				graph.vertices[vertexIndex].positionY = parseFloat(twistedLength) * 150;
 			});
 		});
-
-		graph.width = size[0] * 75;
-		graph.height = size[1] * 150;
-		graph.canvas.setSize(graph.width, graph.height);
-		graph.scale = new GraphScale.Linear(graph, -1, size[0], -1, size[1] + 1);
 	}
 };

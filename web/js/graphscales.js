@@ -1,5 +1,15 @@
 GraphScale = {};
 
+GraphScale.None = function () {
+};
+
+GraphScale.None.prototype = {
+	scaleX: function (x) { return x; },
+	scaleY: function (y) { return y; },
+	unscaleX: function (x) { return x; },
+	unscaleY: function (y) { return y; }
+};
+
 GraphScale.Linear = function(graph, minX, maxX, minY, maxY) {
 	this.graph = graph;
 	this.minX = minX;

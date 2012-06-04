@@ -88,10 +88,15 @@ nav > ul > li:last-child:after {
     right: 0;
     bottom: 0;
     overflow: auto;
-    text-align: center;
 }
 
 #canvas {
 	display: inline-block;
 	background-color: #ffffff;
+	position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
 }
