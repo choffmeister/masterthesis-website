@@ -1,13 +1,7 @@
 {% extends "layout.twig" %}
 
 {% block title %}
-Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with automorphism $\theta = 
-{% for transposition in automorphism.transpositions %}
-    (s_{{ transposition[0] }} s_{{ transposition[1] }})
-{% else %}
-    \textrm{id}
-{% endfor %}
-$
+Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with automorphism $\theta = {{ automorphism.display_name }}$
 {% endblock %}
 
 {% block content %}
@@ -24,7 +18,7 @@ $
 </div>
 <script type="text/javascript">
 $(function () {
-    $.ajax('/weakordering/{{ group.id }}/{{ automorphism.id }}/graph.json', {
+    $.ajax('/api/v1/weakordering/{{ automorphism.id }}/graph', {
         'dataType': 'json',
         'method': 'GET',
         success: function (data) {
@@ -33,9 +27,8 @@ $(function () {
                 return;
             }
 
-            var generators = data[0];
-            var vertices = data[1];
-            var edges = data[2];
+            var vertices = data[0];
+            var edges = data[1];
 
             var graph = new Graph($('#canvas')[0]);
 
@@ -59,7 +52,7 @@ $(function () {
             })
 
             $.each(vertices, function (i, v) {
-                graph.addVertex(v[0], { label: v[0].replace(/[\*|s]/g, ''), twistedLength: v[1], click: function(vertex, event) {
+                graph.addVertex(v[1], { label: v[1], twistedLength: v[0], click: function(vertex, event) {
                     if (event.ctrlKey) {
                         graph.hideAll();
 
@@ -82,7 +75,7 @@ $(function () {
                 }});
             });
             $.each(edges, function (i, e) {
-                graph.addEdge(vertices[e[0]][0], vertices[e[1]][0], { label: e[2], type: e[3] });
+                graph.addEdge(vertices[e[0]][1], vertices[e[1]][1], { label: e[2], type: e[3] });
             });
 
             GraphLayout.WeakOrdering.layout(graph);

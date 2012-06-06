@@ -9,9 +9,10 @@ Coxeter groups
     <thead>
         <tr>
             <td></td>
-            <td>Name</td>
-            <td>Rank</td>
-            <td>Size</td>
+            <td>Group $W$</td>
+            <td>Generators $S$</td>
+            <td>Rank $|S|$</td>
+            <td>Size $|W|$</td>
         </tr>
     </thead>
     <tbody>
@@ -19,6 +20,7 @@ Coxeter groups
         <tr>
             <td><a href="/group/{{ group.id }}">Show</a></td>
             <td>${{ group.name | default('-') }}$</td>
+            <td>{{ group.generators }}</td>
             <td>{{ group.rank }}</td>
             <td>{{ group.size > 0 ? group.size : '$\\infty$' }}</td>
         </tr>

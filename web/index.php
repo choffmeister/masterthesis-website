@@ -65,7 +65,7 @@ $app->get('/group/{id}', function($id) use($app) {
     $automorphisms = $app['db']->fetchAll('SELECT * FROM automorphisms WHERE group_id = ?', array($id));
 
     for ($i = 0; $i < count($automorphisms); $i++) {
-        $automorphisms[$i]['transpositions'] = json_decode($automorphisms[$i]['transpositions']);
+        $automorphisms[$i]['display_name'] = Coxeter\Converter::getAutomorphismLatexDisplayName($automorphisms[$i]);
     }
 
     return $app['twig']->render('group.twig', array(
@@ -74,70 +74,46 @@ $app->get('/group/{id}', function($id) use($app) {
     ));
 });
 
-$app->get('/weakordering/{groupId}/{automorphismId}', function($groupId, $automorphismId) use($app) {
-    $group = $app['db']->fetchAssoc('SELECT * FROM groups WHERE id = ?', array($groupId));
-    if (!$group) {
-        return $app->abort(404, sprintf('Unknown group id %d', $groupId));
-    }
-
+$app->get('/weakordering/{automorphismId}', function($automorphismId) use($app) {
     $automorphism = $app['db']->fetchAssoc('SELECT * FROM automorphisms WHERE id = ?', array($automorphismId));
     if (!$automorphism) {
         return $automorphism->abort(404, sprintf('Unknown automorphism id %d', $automorphismId));
     }
-    $automorphism['transpositions'] = json_decode($automorphism['transpositions']);
+
+    $group = $app['db']->fetchAssoc('SELECT * FROM groups WHERE id = ?', array($automorphism['group_id']));
+    if (!$group) {
+        return $app->abort(404, sprintf('Unknown group id %d', $groupId));
+    }
+
+    $automorphism['display_name'] = Coxeter\Converter::getAutomorphismLatexDisplayName($automorphism);
 
     return $app['twig']->render('weakordering.twig', array(
-        'group' => $group,
         'automorphism' => $automorphism,
+        'group' => $group,
     ));
 });
 
-$app->get('/weakordering/{groupId}/{automorphismId}/graph.json', function($groupId, $automorphismId) use($app) {
-    $weakOrdering = $app['db']->fetchAssoc('SELECT * FROM weakorderings WHERE group_id = ? AND automorphism_id = ?', array($groupId, $automorphismId));
+$app->get('/api/v1/weakordering/{automorphismId}/graph', function($automorphismId) use($app) {
+    $automorphism = $app['db']->fetchAssoc('SELECT * FROM automorphisms WHERE id = ?', array($automorphismId));
 
-    if (!$weakOrdering) {
+    if (!$automorphism) {
         return new JsonResponse(false);
     }
 
-    return new Response($weakOrdering['ordering'], 200, array('Content-type' => 'application/json'));
+    $automorphism['display_name'] = Coxeter\Converter::getAutomorphismLatexDisplayName($automorphism);
+
+    return new Response('[' . $automorphism['wk_vertices'] . ',' . $automorphism['wk_edges'] . ']', 200, array('Content-type' => 'application/json'));
 });
 
 $app->post('/api/v1/import', function(Request $request) use ($app) {
-    $data = json_decode($request->getContent());
-
     if ($request->get('flush') == '1') {
-        $app['db']->executeQuery('TRUNCATE weakorderings');
         $app['db']->executeQuery('TRUNCATE automorphisms');
         $app['db']->executeQuery('TRUNCATE groups');
     }
 
-    foreach ($data as $group) {
-        $app['db']->insert('groups', array(
-           'name' => $group[0],
-           'rank' => $group[1],
-           'size' => $group[2],
-           'matrix' => json_encode($group[3]),
-        ));
+    Coxeter\Importer::importZipFile($app['db'], $request->files->get('data')->__toString());
 
-        $groupId = $app['db']->lastInsertId();
-
-        foreach ($group[4] as $automorphism) {
-            $app['db']->insert('automorphisms', array(
-                'group_id' => $groupId,
-                'transpositions' => json_encode($automorphism[0]),
-            ));
-
-            $automorphismId = $app['db']->lastInsertId();
-
-            $app['db']->insert('weakorderings', array(
-                'group_id' => $groupId,
-                'automorphism_id' => $automorphismId,
-                'ordering' => json_encode($automorphism[1]),
-            ));
-        }
-    }
-
-    return new JsonResponse(true);
+    return "ok\n";
 });
 
 $app->error(function(Exception $exception, $code) use($app) {

@@ -41,16 +41,13 @@ Coxeter group ${{ group.name | default('-') }}$
 	    <td>Automorphisms</td>
 	    <td>
 		    {% for automorphism in automorphisms %}
-		        <div>
-		            $\theta = 
-		            {% for transposition in automorphism.transpositions %}
-		                (s_{{ transposition[0] }} s_{{ transposition[1] }})
-		            {% else %}
-		                \textrm{id}
-		            {% endfor %}
-		            $
-		            <a href="/weakordering/{{ group.id }}/{{ automorphism.id }}">Show weak ordering</a>
-		        </div>
+		        <ul>
+		            <li>
+		                <p>$\theta = {{ automorphism.display_name }}$</p>
+		                <p>$|Wk(\theta, W)| = {{ automorphism.wk_size > 0 ? automorphism.wk_size : '\\infty' }}$</p>
+		                <p><a href="/weakordering/{{ automorphism.id }}">Show weak ordering</a></p>
+		            </li>
+		        </ul>
 		    {% else %}
 		        -
 		    {% endfor %}
