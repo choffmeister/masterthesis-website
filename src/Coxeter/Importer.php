@@ -36,6 +36,9 @@ class Importer
     private static function importWeakOrdering($db, $dataRaw, $verticesRaw, $edgesRaw)
     {
         $data = json_decode($dataRaw);
+        if (json_last_error() != JSON_ERROR_NONE) {
+            throw new \Exception('Error while decoding json');
+        }
 
         $groupId = 0;
         $group = $db->fetchAssoc('SELECT * FROM groups WHERE name = ?', array($data->name));
@@ -55,10 +58,12 @@ class Importer
         $db->insert('automorphisms', array(
             'group_id' => $groupId,
             'name' => $data->automorphism,
-            'wk_size' => $data->wk_size,
-            'wk_max_length' => $data->wk_max_length,
+            'wk_size' => $data->wk_size == 'infinity' ? 0 : $data->wk_size,
+            'wk_max_length' => $data->wk_max_length == 'infinity' ? 0 : $data->wk_max_length,
             'wk_vertices' => $verticesRaw,
             'wk_edges' => $edgesRaw
         ));
+
+        printf("Imported %s.\n", $data->name);
     }
 }

@@ -31,7 +31,7 @@ $app->get('/', function() use($app) {
 });
 
 $app->get('/groups', function() use($app) {
-    $groups = $app['db']->fetchAll('SELECT * FROM groups');
+    $groups = $app['db']->fetchAll('SELECT * FROM groups ORDER BY name ASC');
 
     return $app['twig']->render('groups.twig', array(
         'groups' => $groups,
@@ -112,8 +112,6 @@ $app->post('/api/v1/import', function(Request $request) use ($app) {
     }
 
     Coxeter\Importer::importZipFile($app['db'], $request->files->get('data')->__toString());
-
-    return "ok\n";
 });
 
 $app->error(function(Exception $exception, $code) use($app) {
