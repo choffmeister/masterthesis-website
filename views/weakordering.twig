@@ -8,8 +8,13 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 <div id="workspace" class="workspace">
     <div id="controls" class="workspace-controls">
         <div>
-            <button class="btn" data-workspace-bind="reset">Reset positions</button>
-            <button class="btn" data-workspace-bind="unhide">Unhide all nodes</button>
+            <button class="btn" data-workspace-clickbind="reset">Reset positions</button>
+            <button class="btn" data-workspace-clickbind="unhide">Unhide all nodes</button>
+        </div>
+        <div>
+        	<div>
+        		$\rho \in [$ <input id="rho-range" type="text" data-workspace-changebind="redraw" value="0,4" style="width: 65px;" /> $]$
+        	</div>
         </div>
     </div>
     <div id="content" class="workspace-content">
@@ -18,6 +23,63 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 </div>
 <script type="text/javascript">
 $(function () {
+	var graph = null;
+	var verticesRaw = [];
+	var edgesRaw = [];
+	
+	var redraw = function () {
+		graph.clear();
+		
+		var rhoRange = $('#rho-range').val().split(/,/);
+		if (rhoRange.length != 2 || isNaN(rhoRange[0].trim()) || isNaN(rhoRange[1].trim())) {
+			alert("Please enter a range like [0,10]");
+			return;
+		}
+		var rhoMin = parseInt(rhoRange[0].trim());
+		var rhoMax = parseInt(rhoRange[1].trim());
+		
+        $.each(verticesRaw, function (i, v) {
+	    	if (v[0] < rhoMin || v[0] > rhoMax) return;
+	    	
+	        graph.addVertex(v[1], { label: v[1], twistedLength: v[0], click: function(vertex, event) {
+	            if (event.ctrlKey) {
+	                graph.hideAll();
+	
+	                graph.walk(vertex, {
+	                    direction: -1,
+	                    vertexCallback: function (v) { v.show(); },
+	                    edgeCallback: function (e) { e.show(); }
+	                });
+	            }
+	
+	            if (event.shiftKey) {
+	                graph.hideAll();
+	
+	                graph.walk(vertex, {
+	                    direction: 1,
+	                    vertexCallback: function (v) { v.show(); },
+	                    edgeCallback: function (e) { e.show(); }
+	                });
+	            }
+	        }});
+		});
+
+	    $.each(edgesRaw, function (i, e) {
+	    	var source = verticesRaw[e[0]];
+	    	var target = verticesRaw[e[1]];
+	
+			if (source[0] < rhoMin || source[0] > rhoMax || target[0] < rhoMin || target[0] > rhoMax) return;
+	
+	        graph.addEdge(source[1], target[1], { label: e[2], type: e[3] });
+	    });
+	
+	    GraphLayout.WeakOrdering.layout(graph);
+	    graph.resetViewPort();
+	    
+	    console.log(graph);
+	    graph.draw();
+	};
+	
     $.ajax('/api/v1/weakordering/{{ automorphism.id }}/graph', {
         'dataType': 'json',
         'method': 'GET',
@@ -27,10 +89,10 @@ $(function () {
                 return;
             }
 
-            var vertices = data[0];
-            var edges = data[1];
+            verticesRaw = data[0];
+            edgesRaw = data[1];
 
-            var graph = new Graph($('#canvas')[0]);
+            graph = new Graph($('#canvas')[0]);
 
             $('#workspace').workspace({
                 toggleFullscreen: function () { graph.updateViewPort(); },
@@ -48,41 +110,13 @@ $(function () {
                 },
                 unhide: function () {
                     graph.showAll();
+                },
+                redraw: function () {
+                	redraw();
                 }
-            })
-
-            $.each(vertices, function (i, v) {
-                graph.addVertex(v[1], { label: v[1], twistedLength: v[0], click: function(vertex, event) {
-                    if (event.ctrlKey) {
-                        graph.hideAll();
-
-                        graph.walk(vertex, {
-                            direction: -1,
-                            vertexCallback: function (v) { v.show(); },
-                            edgeCallback: function (e) { e.show(); }
-                        });
-                    }
-
-                    if (event.shiftKey) {
-                        graph.hideAll();
-
-                        graph.walk(vertex, {
-                            direction: 1,
-                            vertexCallback: function (v) { v.show(); },
-                            edgeCallback: function (e) { e.show(); }
-                        });
-                    }
-                }});
-            });
-            $.each(edges, function (i, e) {
-                graph.addEdge(vertices[e[0]][1], vertices[e[1]][1], { label: e[2], type: e[3] });
             });
 
-            GraphLayout.WeakOrdering.layout(graph);
-            graph.resetViewPort();
-            
-            console.log(graph);
-            graph.draw();
+			redraw();
         },
         error: function (err) {
             alert(err);

@@ -46,6 +46,12 @@ Graph.prototype = {
 		this.updateViewPort();
 	},
 	
+	clear: function () {
+		this.canvas.clear();
+		this.vertices = {};
+		this.edges = []
+	},
+	
 	resetViewPort: function () {
 		var bbox = [Infinity, -Infinity, Infinity, -Infinity];
 		

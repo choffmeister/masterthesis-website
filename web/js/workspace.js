@@ -10,9 +10,15 @@
 			var controls = $(workspace).children('.workspace-controls');
 			var content = $(workspace).children('.workspace-content');
 			
-			$(controls).find('button[data-workspace-bind]').click(function () {
-				if (settings[$(this).attr('data-workspace-bind')]) {
-					settings[$(this).attr('data-workspace-bind')]();
+			$(controls).find('[data-workspace-clickbind]').click(function () {
+				if (settings[$(this).attr('data-workspace-clickbind')]) {
+					settings[$(this).attr('data-workspace-clickbind')]();
+				}
+			});
+			
+			$(controls).find('[data-workspace-changebind]').change(function () {
+				if (settings[$(this).attr('data-workspace-changebind')]) {
+					settings[$(this).attr('data-workspace-changebind')]();
 				}
 			});
 			
@@ -66,7 +72,7 @@
 				if (settings['shortcuts']) {
 					$(document).bind('keydown', function (event) {
 						switch (event.keyCode) {
-							case 13: if (ctrlKey) toggleFullscreen(); return false;
+							case 13: if (event.ctrlKey) toggleFullscreen(); return false;
 							case 38: panUp(); return false;
 							case 40: panDown(); return false;
 							case 37: panLeft(); return false;

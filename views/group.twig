@@ -45,6 +45,7 @@ Coxeter group ${{ group.name | default('-') }}$
 		            <li>
 		                <p>$\theta = {{ automorphism.display_name }}$</p>
 		                <p>$|Wk(\theta, W)| = {{ automorphism.wk_size > 0 ? automorphism.wk_size : '\\infty' }}$</p>
+		                <p>$\max_{w \in W} \rho(w) = {{ automorphism.wk_max_length > 0 ? automorphism.wk_max_length : '\\infty' }}$</p>
 		                <p><a href="/weakordering/{{ automorphism.id }}">Show weak ordering</a></p>
 		            </li>
 		        </ul>
