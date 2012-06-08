@@ -55,7 +55,7 @@ nav > ul > li:last-child:after {
 
 .workspace.workspace-fullscreen {
 	position: fixed;
-	z-index: 10000;
+	z-index: 1000;
 	left: 0;
 	top: 0;
 	right: 0;
@@ -64,7 +64,7 @@ nav > ul > li:last-child:after {
 
 .workspace .workspace-controls {
     position: absolute;
-    z-index: 20000;
+    z-index: 1001;
     left: 0;
     top: 0;
     width: 150px;

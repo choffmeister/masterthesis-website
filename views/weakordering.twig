@@ -5,11 +5,24 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 {% endblock %}
 
 {% block content %}
+<div id="hide-edges-modal" class="modal hide">
+    <div class="modal-header">
+	    <button type="button" class="close" data-dismiss="modal">×</button>
+	    <h3>Hide edges</h3>
+    </div>
+    <div class="modal-body">
+    </div>
+    <div class="modal-footer">
+	    <a href="#" class="btn btn-primary" data-dismiss="modal">Hide</a>
+	    <a href="#" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
 <div id="workspace" class="workspace">
     <div id="controls" class="workspace-controls">
         <div>
             <button class="btn" data-workspace-clickbind="reset">Reset positions</button>
-            <button class="btn" data-workspace-clickbind="unhide">Unhide all nodes</button>
+            <button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
+        	<button class="btn" data-workspace-clickbind="hideEdges">Hide edges</button>
         </div>
         <div>
         	<div>
@@ -24,6 +37,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 <script type="text/javascript">
 $(function () {
 	var graph = null;
+	var generatorsRaw = [];
 	var verticesRaw = [];
 	var edgesRaw = [];
 	
@@ -89,8 +103,26 @@ $(function () {
                 return;
             }
 
-            verticesRaw = data[0];
-            edgesRaw = data[1];
+			generatorsRaw = data[0];
+            verticesRaw = data[1];
+            edgesRaw = data[2];
+            
+            $.each(generatorsRaw, function (i, g) {
+            	$('#hide-edges-modal .modal-body').append('<p><input type="checkbox" data-generator="' + (i + 1) + '" /> ' + g + '</p>');
+            });
+            $('#hide-edges-modal a.btn-primary').click(function () {
+            	var generators = [];
+            	
+            	$('#hide-edges-modal [data-generator]:checked').each(function () {
+            		generators.push(parseInt($(this).attr('data-generator')));
+            	});
+            	
+            	$.each(graph.edges, function (i, e) {
+            		if ($.inArray(e.options.label, generators) != -1) {
+            			e.hide();
+            		};
+            	});
+            });
 
             graph = new Graph($('#canvas')[0]);
 
@@ -113,6 +145,9 @@ $(function () {
                 },
                 redraw: function () {
                 	redraw();
+                },
+                hideEdges: function () {
+                	$('#hide-edges-modal').modal();
                 }
             });
 

@@ -95,14 +95,18 @@ $app->get('/weakordering/{automorphismId}', function($automorphismId) use($app) 
 
 $app->get('/api/v1/weakordering/{automorphismId}/graph', function($automorphismId) use($app) {
     $automorphism = $app['db']->fetchAssoc('SELECT * FROM automorphisms WHERE id = ?', array($automorphismId));
-
     if (!$automorphism) {
         return new JsonResponse(false);
     }
 
+    $group = $app['db']->fetchAssoc('SELECT * FROM groups WHERE id = ?', array($automorphism['group_id']));
+    if (!$group) {
+        return $app->abort(404, sprintf('Unknown group id %d', $groupId));
+    }
+
     $automorphism['display_name'] = Coxeter\Converter::getAutomorphismLatexDisplayName($automorphism);
 
-    return new Response('[' . $automorphism['wk_vertices'] . ',' . $automorphism['wk_edges'] . ']', 200, array('Content-type' => 'application/json'));
+    return new Response('[' . $group['generators'] . ',' . $automorphism['wk_vertices'] . ',' . $automorphism['wk_edges'] . ']', 200, array('Content-type' => 'application/json'));
 });
 
 $app->post('/api/v1/import', function(Request $request) use ($app) {
