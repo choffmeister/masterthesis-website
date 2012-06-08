@@ -306,8 +306,7 @@ GraphEdge.prototype = {
 		}
 
 		line.attr('path', 'M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
-		line.attr({ 'stroke-width': 1 });
-		line.attr({ 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
+		line.attr({ 'stroke-width': 3, 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
 		if (edge.options.type == 0) {
 			line.attr({ 'stroke-dasharray': '- ' });
 		}
