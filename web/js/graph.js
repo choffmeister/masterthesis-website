@@ -56,11 +56,20 @@ Graph.prototype = {
 		var bbox = [Infinity, -Infinity, Infinity, -Infinity];
 		
 		$.each(this.vertices, function (i, v) {
-			if (v.positionX < bbox[0]) bbox[0] = v.positionX;
-			if (v.positionX > bbox[1]) bbox[1] = v.positionX;
-			if (v.positionY < bbox[2]) bbox[2] = v.positionY;
-			if (v.positionY > bbox[3]) bbox[3] = v.positionY;
+			if (v.options.visible) {
+				if (v.positionX < bbox[0]) bbox[0] = v.positionX;
+				if (v.positionX > bbox[1]) bbox[1] = v.positionX;
+				if (v.positionY < bbox[2]) bbox[2] = v.positionY;
+				if (v.positionY > bbox[3]) bbox[3] = v.positionY;
+			}
 		});
+		
+		if (bbox[0] == Infinity) {
+			bbox[0] = 0.0;
+			bbox[1] = 0.0;
+			bbox[2] = 0.0;
+			bbox[3] = 0.0;
+		}
 		
 		bbox[0] -= 15.0;
 		bbox[1] += 15.0;
