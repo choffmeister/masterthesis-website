@@ -5,30 +5,19 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 {% endblock %}
 
 {% block content %}
-<div id="hide-edges-modal" class="modal hide">
-    <div class="modal-header">
-	    <button type="button" class="close" data-dismiss="modal">×</button>
-	    <h3>Hide edges</h3>
-    </div>
-    <div class="modal-body">
-    </div>
-    <div class="modal-footer">
-	    <a href="#" class="btn btn-primary" data-dismiss="modal">Hide</a>
-	    <a href="#" class="btn" data-dismiss="modal">Close</a>
-    </div>
-</div>
 <div id="workspace" class="workspace">
     <div id="controls" class="workspace-controls">
         <div>
             <button class="btn" data-workspace-clickbind="reset">Reset positions</button>
             <button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
-        	<button class="btn" data-workspace-clickbind="hideEdges">Hide edges</button>
         </div>
+    </div>
+    <div id="controls" class="workspace-controls">
         <div>
-        	<div>
-        		$\rho \in [$ <input id="rho-range" type="text" data-workspace-changebind="redraw" value="0,4" style="width: 65px;" /> $]$
-        	</div>
-        </div>
+        	$\rho \in [$ <input id="rho-range" type="text" data-workspace-changebind="redraw" value="0,4" style="width: 65px;" /> $]$
+    	</div>
+    	<div id="generators-control">
+    	</div>
     </div>
     <div id="content" class="workspace-content">
        <div id="canvas"></div>
@@ -93,8 +82,8 @@ $(function () {
 	};
 	
     $.ajax('/api/v1/weakordering/{{ automorphism.id }}/graph', {
-        'dataType': 'json',
-        'method': 'GET',
+        dataType: 'json',
+        method: 'GET',
         success: function (data) {
             if (data === false) {
                 $('#canvas').html('Weak ordering has not been calculated yet!');
@@ -104,23 +93,6 @@ $(function () {
 			generatorsRaw = data[0];
             verticesRaw = data[1];
             edgesRaw = data[2];
-            
-            $.each(generatorsRaw, function (i, g) {
-            	$('#hide-edges-modal .modal-body').append('<p><input type="checkbox" data-generator="' + (i + 1) + '" /> ' + g + '</p>');
-            });
-            $('#hide-edges-modal a.btn-primary').click(function () {
-            	var generators = [];
-            	
-            	$('#hide-edges-modal [data-generator]:checked').each(function () {
-            		generators.push(parseInt($(this).attr('data-generator')));
-            	});
-            	
-            	$.each(graph.edges, function (i, e) {
-            		if ($.inArray(e.options.label, generators) != -1) {
-            			e.hide();
-            		};
-            	});
-            });
 
             graph = new Graph($('#canvas')[0]);
 
@@ -143,13 +115,30 @@ $(function () {
                 },
                 redraw: function () {
                 	redraw();
-                },
-                hideEdges: function () {
-                	$('#hide-edges-modal').modal();
                 }
             });
 
 			redraw();
+			console.log(graph);
+            $.each(generatorsRaw, function (i, g) {
+            	$('#generators-control').append('<div style="width: 50%;"><input type="checkbox" data-generator="' + (i + 1) + '" checked="checked" /> ' +
+            		'<span style="font-weight: bold; color: ' + graph.edgeColors[i+1] + ';">' + g + '</span></div>');
+            });
+			$('#generators-control input[type=checkbox]').change(function () {
+            	var generators = [];
+            	
+            	$('#generators-control input[type=checkbox]:checked').each(function () {
+            		generators.push(parseInt($(this).attr('data-generator')));
+            	});
+            	
+            	$.each(graph.edges, function (i, e) {
+            		if ($.inArray(e.options.label, generators) != -1) {
+            			e.show();
+            		} else {
+            			e.hide();
+            		}
+            	});
+			});
         },
         error: function (err) {
             alert(err);

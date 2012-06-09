@@ -6,7 +6,8 @@ Graph = function (element) {
 	graph.vertices = {};
 	graph.edges = [];
 	graph.scale = new GraphScale.None();
-	
+	graph.edgeColors = [];
+
 	graph.zoom = 1.0;
 	graph.center = [0.0, 0.0];
 	graph.updateViewPort();

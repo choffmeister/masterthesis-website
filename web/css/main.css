@@ -55,7 +55,7 @@ nav > ul > li:last-child:after {
 
 .workspace.workspace-fullscreen {
 	position: fixed;
-	z-index: 1000;
+	z-index: 10;
 	left: 0;
 	top: 0;
 	right: 0;
@@ -64,10 +64,17 @@ nav > ul > li:last-child:after {
 
 .workspace .workspace-controls {
     position: absolute;
-    z-index: 1001;
-    left: 0;
+    z-index: 11;
     top: 0;
     width: 150px;
+}
+
+.workspace .workspace-controls:nth-child(1) {
+    left: 0;
+}
+
+.workspace .workspace-controls:nth-child(2) {
+    right: 0;
 }
 
 .workspace-controls > div {
@@ -79,6 +86,10 @@ nav > ul > li:last-child:after {
 
 .workspace-controls > div > button {
     width: 100%;
+}
+
+.workspace-controls hr {
+	margin: 0.2em 0;
 }
 
 .workspace .workspace-content {
@@ -99,4 +110,8 @@ nav > ul > li:last-child:after {
     right: 0;
     bottom: 0;
     overflow: hidden;
+}
+
+* p:last-child {
+	margin-bottom: 0;
 }

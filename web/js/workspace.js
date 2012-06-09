@@ -7,6 +7,7 @@
 
 		return this.each(function () {
 			var workspace = this;
+			var firstControls = $(workspace).children('.workspace-controls:first-child');
 			var controls = $(workspace).children('.workspace-controls');
 			var content = $(workspace).children('.workspace-content');
 			
@@ -67,7 +68,7 @@
 				$('<button class="btn" style="width: 50%;">⇠</button>').click(function () { panLeft(); }).appendTo(viewportControls);
 				$('<button class="btn" style="width: 50%;">⇢</button>').click(function () { panRight(); }).appendTo(viewportControls);
 
-				controls.prepend(viewportControls);
+				firstControls.prepend(viewportControls);
 				
 				if (settings['shortcuts']) {
 					$(document).bind('keydown', function (event) {

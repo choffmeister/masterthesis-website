@@ -42,5 +42,7 @@ GraphLayout.WeakOrdering = {
 			
 			e.options.color = edgeColors[e.options.label];
 		});
+		
+		graph.edgeColors = edgeColors;
 	}
 };
