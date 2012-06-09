@@ -3,10 +3,8 @@ GraphLayout.WeakOrdering = {
 	layout: function (graph) {
 		var levels = {};
 		var size = [0, 0];
-		var edgeColors = {};
-		Raphael.getColor.reset();
-		
 		var doubleEdges = [];
+
 		for (var i = 0; i < graph.edges.length - 1; i++) {
 			if (graph.edges[i].source == graph.edges[i + 1].source &&
 				graph.edges[i].target == graph.edges[i + 1].target)
@@ -35,9 +33,12 @@ GraphLayout.WeakOrdering = {
 			});
 		});
 		
+		var edgeColors = {};
+		var colorHelper = new ColorHelper(0.7, 0.99);
+		
 		$.each(graph.edges, function(i, e) {
 			if (!edgeColors[e.options.label]) {
-				edgeColors[e.options.label] = Raphael.getColor(0.99);
+				edgeColors[e.options.label] = colorHelper.next()[3];
 			}
 			
 			e.options.color = edgeColors[e.options.label];
