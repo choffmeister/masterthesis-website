@@ -426,7 +426,9 @@ GraphEdge.prototype = {
 		var edge = this;
 		var graph = edge.graph;
 		var canvas = graph.canvas;
-
+		
+		if (!edge.enabled) return;
+		
 		var x1 = graph.scale.scaleX(edge.source.positionX);
 		var y1 = graph.scale.scaleY(edge.source.positionY);
 		var x2 = graph.scale.scaleX(edge.target.positionX);
