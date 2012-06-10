@@ -10,6 +10,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
         <div>
             <button class="btn" data-workspace-clickbind="reset">Reset positions</button>
             <button class="btn" data-workspace-clickbind="unselect">Unselect all</button>
+            <button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
         </div>
     </div>
     <div id="controls" class="workspace-controls">
@@ -21,9 +22,8 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
     	<div id="generators-control">
     	</div>
     	<div>
-    	    <button class="btn" data-workspace-clickbind="hideUnconnecting">Hide unconnecting</button>
+    	    <button class="btn" data-workspace-clickbind="highlightConnecting">Highlight connecting</button>
     	    <button class="btn" data-workspace-clickbind="hideUnselected">Hide unselected</button>
-    	    <button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
     	</div>
     </div>
     <div id="content" class="workspace-content">
@@ -109,7 +109,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                     changerho: function () {
                     	toggleRhoLayers();
                     },
-                    hideUnconnecting: function () {
+                    highlightConnecting: function () {
                         var selection = [];
 
                         $.each(graph.vertices, function (i, v) {
@@ -126,23 +126,39 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                         var first = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[0] : selection[1];
                         var second = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[1] : selection[0];
 
-                        graph.showAllEdges(50);
+                        $.each(graph.edges, function (i, e) { e.unhighlight(); });
+
+                        var connectingVertices = [];
+
                         graph.walk(first, {
-                        	notEdgeCallback: function (e) {
-                        	    e.hide(50);
+                        	vertexCallback: function (v) {
+                        		connectingVertices.push(v);
                             }
                         });
                         graph.walk(second, {
                             direction: -1,
-                        	notEdgeCallback: function (e) {
-                        	    e.hide(50);
+                        	notVertexCallback: function (v) {
+                        	    var pos = $.inArray(v, connectingVertices);
+
+                        	    if (pos > -1) {
+                        	    	connectingVertices.splice(pos, 1);
+                        	    }
                             }
+                        });
+
+                        $.each(connectingVertices, function (i, v) {
+                            v.highlight();
+        	            	$.each(v.edges, function (i, e) {
+            	            	if (e.source.options.highlighted && e.target.options.highlighted) {
+            	            	    e.highlight();
+            	            	}
+            	            });
                         });
                     },
                     hideUnselected: function () {
                     	graph.showAllEdges(50);
                         $.each(graph.edges, function (i, e) {
-                            if (!e.options.highlighted) {
+                            if (!e.source.options.highlighted || !e.target.options.highlighted) {
                                 e.hide(50);
                             }
                         });
@@ -160,8 +176,16 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
             	            if (!event.ctrlKey) {
                 	            if (vertex.options.highlighted) {
                 	            	vertex.unhighlight();
+                	            	$.each(vertex.edges, function (i, e) {
+                	            	    e.unhighlight();
+                    	            });
                 	            } else {
                 	            	vertex.highlight();
+                	            	$.each(vertex.edges, function (i, e) {
+                    	            	if (e.source.options.highlighted && e.target.options.highlighted) {
+                    	            	    e.highlight();
+                    	            	}
+                    	            });
                 	            }
             	            }
             	        },
