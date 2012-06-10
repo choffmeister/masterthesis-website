@@ -92,6 +92,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                     	graph.draw();
                     },
                     unhide: function () {
+                    	$('#generators-control button').addClass('active');
                         graph.showAll();
                     },
                     redraw: function () {
@@ -161,27 +162,28 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
         	    graph.draw();
 
                 $.each(generatorsRaw, function (gIndex, g) {
-                    var colorBlock = '<div style="background-color: ' + graph.edgeColors[gIndex+1] + '; text-shadow: none; border-radius: 3px; display: inline-block; padding: 2px; width: 20px; font-size: 18px; font-weight: bold;">';
-                	var showButton = $('<button class="btn" style="width: 50%;" title="Show edges with label ' + g + '">' + colorBlock + '+</div></button>');
-                	var hideButton = $('<button class="btn" style="width: 50%;" title="Hide edges with label ' + g + '">' + colorBlock + '-</div></button>');
+                    var colorBlock = '<div class="colorblock" style="background-color: ' + graph.edgeColors[gIndex+1] + ';"></div>';
+                	var button = $('<button class="btn active" data-toggle="button" title="Hide edges with label ' + g + '">' + colorBlock + ' ' + g + '</button>');
 
-                    showButton.click(function () {
-                        $.each(graph.edges, function (i, e) {
-                            if (e.options.label == gIndex + 1) {
-                                e.show(1);
-                            }
-                        });
+                    button.click(function () {
+                        if ($(this).hasClass('active')) {
+                            $.each(graph.edges, function (i, e) {
+                                if (e.options.label == gIndex + 1) {
+                                    e.hide(1);
+                                }
+                            });
+                        } else {
+                            $.each(graph.edges, function (i, e) {
+                                if (e.options.label == gIndex + 1) {
+                                    e.show(1);
+                                }
+                            });
+                        }
+
+
                     });
 
-                    hideButton.click(function () {
-                        $.each(graph.edges, function (i, e) {
-                            if (e.options.label == gIndex + 1) {
-                                e.hide(1);
-                            }
-                        });
-                    });
-
-                	$('#generators-control').append(showButton).append(hideButton);
+                	$('#generators-control').append(button);
                 });
             },
             error: function (err) {

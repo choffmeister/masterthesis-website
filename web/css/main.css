@@ -115,3 +115,13 @@ nav > ul > li:last-child:after {
 * p:last-child {
 	margin-bottom: 0;
 }
+
+.colorblock {
+	vertical-align: middle;
+	background-color: #ffffff;
+	text-shadow: none;
+	border-radius: 3px;
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+}
