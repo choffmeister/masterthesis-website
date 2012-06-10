@@ -137,14 +137,30 @@ Graph.prototype = {
 		return edge;
 	},
 
-	showAll: function() {
-		$.each(this.edges, function (i, edge) { edge.show(-1); });
-		$.each(this.vertices, function (i, vertex) { vertex.show(-1); });
+	showAll: function(order) {
+		this.showAllVertices(order);
+		this.showAllEdges(order);
 	},
 
-	hideAll: function() {
-		$.each(this.edges, function (i, edge) { edge.hide(-1); });
-		$.each(this.vertices, function (i, vertex) { vertex.hide(-1); });
+	hideAll: function(order) {
+		this.hideAllVertices(order);
+		this.hideAllEdges(order);
+	},
+	
+	showAllVertices: function(order) {
+		$.each(this.vertices, function (i, vertex) { vertex.show(order); });
+	},
+
+	hideAllVertices: function(order) {
+		$.each(this.vertices, function (i, vertex) { vertex.hide(order); });
+	},
+	
+	showAllEdges: function(order) {
+		$.each(this.edges, function (i, edge) { edge.show(order); });
+	},
+
+	hideAllEdges: function(order) {
+		$.each(this.edges, function (i, edge) { edge.hide(order); });
 	},
 
 	draw: function() {
@@ -314,6 +330,10 @@ GraphVertex.prototype = {
 
 			if (vertex.options.click) circ.click(function (event) {
 				vertex.options.click(vertex, event);
+			});
+			
+			if (vertex.options.dblclick) circ.dblclick(function (event) {
+				vertex.options.dblclick(vertex, event);
 			});
 			
 			var startX = 0;

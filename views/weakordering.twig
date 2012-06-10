@@ -95,7 +95,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                     },
                     unhide: function () {
                     	$('#generators-control button').addClass('active');
-                        graph.showAll();
+                        graph.showAll(-1);
                     },
                     redraw: function () {
                     	redraw();
@@ -113,41 +113,41 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                         });
 
                         if (selection.length != 2) {
-                            alert('Please select exactly two elements by ctrl-clicking nodes before using this function.');
+                            alert('Please select exactly two elements by double clicking nodes before using this function.');
                             return;
                         }
 
                         var first = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[0] : selection[1];
                         var second = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[1] : selection[0];
 
+                        graph.showAllEdges(50);
                         graph.walk(first, {
-                        	notVertexCallback: function (v) {
-                            	v.hide();
-                        	},
                         	notEdgeCallback: function (e) {
-                        	    e.hide();
+                        	    e.hide(50);
                             }
                         });
                         graph.walk(second, {
                             direction: -1,
-                        	notVertexCallback: function (v) {
-                            	v.hide();
-                        	},
                         	notEdgeCallback: function (e) {
-                        	    e.hide();
+                        	    e.hide(50);
                             }
                         });
                     }
                 });
 
                 $.each(verticesRaw, function (i, v) {
-        	        graph.addVertex(v[1], { label: v[1], twistedLength: v[0], disabled: true, click: function(vertex, event) {
-        	        	if (event.ctrlKey) {
-        	        		vertex.highlight();
-        	        	} else if (event.shiftKey) {
-        	        		vertex.unhighlight();
-        	        	}
-        	        }});
+        	        graph.addVertex(v[1], {
+            	        label: v[1],
+            	        twistedLength: v[0],
+            	        disabled: true,
+            	        dblclick: function(vertex, event) {
+            	            if (vertex.options.highlighted) {
+            	            	vertex.unhighlight();
+            	            } else {
+            	            	vertex.highlight();
+            	            }
+            	        }
+        	        });
         		});
 
         	    $.each(edgesRaw, function (i, e) {
@@ -171,13 +171,13 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                         if ($(this).hasClass('active')) {
                             $.each(graph.edges, function (i, e) {
                                 if (e.options.label == gIndex + 1) {
-                                    e.hide(1);
+                                    e.hide(100);
                                 }
                             });
                         } else {
                             $.each(graph.edges, function (i, e) {
                                 if (e.options.label == gIndex + 1) {
-                                    e.show(1);
+                                    e.show(100);
                                 }
                             });
                         }
