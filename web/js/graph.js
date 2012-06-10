@@ -226,8 +226,6 @@ Graph.prototype = {
 			});
 		}
 		
-		console.log([verticesRemaining, edgesRemaining]);
-		
 		$.each(verticesRemaining, function (id, v) {
 			options.notVertexCallback(v);
 		});
@@ -351,7 +349,7 @@ GraphVertex.prototype = {
 			var startX = 0;
 			var startY = 0;
 			circ.drag(function (dx, dy, x, y, event) {
-				if (event.ctrlKey || event.shiftKey) return;
+				if (!event.ctrlKey || event.shiftKey) return;
 				
 				vertex.positionX = graph.scale.unscaleX(startX + dx / graph.zoom);
 				vertex.positionY = graph.scale.unscaleY(startY + dy / graph.zoom);
