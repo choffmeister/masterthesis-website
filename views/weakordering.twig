@@ -153,9 +153,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                     showButton.click(function () {
                         $.each(graph.edges, function (i, e) {
                             if (e.options.label == gIndex + 1) {
-                                if (e.options.visible && e.element != null) {
-                                    e.element.show();
-                                }
+                                e.show(1);
                             }
                         });
                     });
@@ -163,9 +161,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                     hideButton.click(function () {
                         $.each(graph.edges, function (i, e) {
                             if (e.options.label == gIndex + 1) {
-                                if (e.element != null) {
-                                    e.element.hide();
-                                }
+                                e.hide(1);
                             }
                         });
                     });

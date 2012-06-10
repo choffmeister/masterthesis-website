@@ -57,7 +57,7 @@ Graph.prototype = {
 		var bbox = [Infinity, -Infinity, Infinity, -Infinity];
 		
 		$.each(this.vertices, function (i, v) {
-			if (v.options.visible) {
+			if (v.isVisible()) {
 				if (v.positionX < bbox[0]) bbox[0] = v.positionX;
 				if (v.positionX > bbox[1]) bbox[1] = v.positionX;
 				if (v.positionY < bbox[2]) bbox[2] = v.positionY;
@@ -138,13 +138,13 @@ Graph.prototype = {
 	},
 
 	showAll: function() {
-		$.each(this.edges, function (i, edge) { edge.show(); });
-		$.each(this.vertices, function (i, vertex) { vertex.show(); });
+		$.each(this.edges, function (i, edge) { edge.show(-1); });
+		$.each(this.vertices, function (i, vertex) { vertex.show(-1); });
 	},
 
 	hideAll: function() {
-		$.each(this.edges, function (i, edge) { edge.hide(); });
-		$.each(this.vertices, function (i, vertex) { vertex.hide(); });
+		$.each(this.edges, function (i, edge) { edge.hide(-1); });
+		$.each(this.vertices, function (i, vertex) { vertex.hide(-1); });
 	},
 
 	draw: function() {
@@ -227,23 +227,44 @@ GraphVertex = function (graph, id, options) {
 	this.edges = [];
 	this.options = options;
 	this.element = null;
+	this.visibility = { 0: options.visible ? true : false };
 };
 
 GraphVertex.prototype = {
-	hide: function () {
-		this.options.visible = false;
+	hide: function (order) {
+		if (order == -1) {
+			this.visibility = { 0: false };
+		} else {
+			this.visibility[order || 0] = false;
+		}
 
-		if (this.element != null) {
+		if (!this.isVisible() && this.element != null) {
 			this.element.hide();
 		}
 	},
 
-	show: function () {
-		this.options.visible = true;
+	show: function (order) {
+		if (order == -1) {
+			this.visibility = { 0: true };
+		} else {
+			this.visibility[order || 0] = true;
+		}
 		
-		if (this.element != null) {
+		if (this.isVisible() && this.element != null) {
 			this.element.show();
 		}
+	},
+	
+	isVisible: function () {
+		var result = true;
+		
+		$.each(this.visibility, function (order, value) {
+			if (!value) {
+				result = false;
+			}
+		});
+		
+		return result;
 	},
 	
 	highlight: function () {
@@ -289,13 +310,12 @@ GraphVertex.prototype = {
 			});
 
 			vertex.element = circ;
-			if (vertex.options.visible != true) vertex.element.hide();
+			if (vertex.isVisible() != true) vertex.element.hide();
 		}
 		
 		circ.attr({ 'cx': x, 'cy': y });
 		circ.attr({ 'fill': '#ffffff', 'title': vertex.options.label });
 		circ.attr({ 'fill-opacity': vertex.options.opacity, 'stroke-opacity': vertex.options.opacity });
-		
 		
 		if (vertex.options.highlighted) {
 			circ.attr({ 'stroke': '#ff0000', 'stroke-width': 6 });
@@ -311,23 +331,44 @@ GraphEdge = function (graph, sourceVertex, targetVertex, options) {
 	this.target = targetVertex;
 	this.options = options;
 	this.element = null;
+	this.visibility = { 0: options.visible ? true : false };
 };
 
 GraphEdge.prototype = {
-	hide: function () {
-		this.options.visible = false;
+	hide: function (order) {
+		if (order == -1) {
+			this.visibility = { 0: false };
+		} else {
+			this.visibility[order || 0] = false;
+		}
 
-		if (this.element != null) {
+		if (!this.isVisible() && this.element != null) {
 			this.element.hide();
 		}
 	},
 
-	show: function () {
-		this.options.visible = true;
+	show: function (order) {
+		if (order == -1) {
+			this.visibility = { 0: true };
+		} else {
+			this.visibility[order || 0] = true;
+		}
 		
-		if (this.element != null) {
+		if (this.isVisible() && this.element != null) {
 			this.element.show();
 		}
+	},
+	
+	isVisible: function () {
+		var result = true;
+		
+		$.each(this.visibility, function (order, value) {
+			if (!value) {
+				result = false;
+			}
+		});
+		
+		return result;
 	},
 	
 	highlight: function () {
@@ -374,7 +415,7 @@ GraphEdge.prototype = {
 			line.attr({ 'stroke': edge.options.color });
 		}
 		edge.element = line;
-		if (edge.options.visible != true) edge.element.hide();
+		if (!edge.isVisible()) edge.element.hide();
 		
 		if (edge.options.highlighted) {
 			line.attr({ 'stroke-width': 6 });
