@@ -72,6 +72,8 @@
 				
 				if (settings['shortcuts']) {
 					$(document).bind('keydown', function (event) {
+						if ($(event.target).is('input')) return;
+						
 						switch (event.keyCode) {
 							case 13: if (event.ctrlKey) toggleFullscreen(); return false;
 							case 38: panUp(); return false;
