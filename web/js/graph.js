@@ -103,6 +103,7 @@ Graph.prototype = {
 		options = $.extend({
 			label: id,
 			opacity: 1.0,
+			highlighted: false,
 			visible: true
 		}, options);
 		
@@ -117,6 +118,7 @@ Graph.prototype = {
 			bending: 0,
 			directed: false,
 			opacity: 1.0,
+			highlighted: false,
 			visible: true
 		}, options);
 		
@@ -167,6 +169,9 @@ Graph.prototype = {
 			direction: 1
 		}, options);
 		
+		var verticesRemaining = options.notVertexCallback ? $.extend({}, this.vertices) : {};
+		var edgesRemaining = options.notEdgeCallback ? [].concat(this.edges) : [];
+		
 		var stack = new Array();
 		var walkedVertices = new Array();
 		var walkedEdges = new Array();
@@ -174,6 +179,7 @@ Graph.prototype = {
 		
 		while (stack.length > 0) {
 			var v = stack.pop();
+			if (verticesRemaining[v.id]) delete verticesRemaining[v.id];
 			
 			if ($.inArray(v, walkedVertices) != -1) continue;
 			walkedVertices.push(v);
@@ -187,6 +193,11 @@ Graph.prototype = {
 				if ($.inArray(e, walkedEdges) != -1) return;
 				walkedEdges.push(e);
 				
+				var p = $.inArray(e, edgesRemaining);
+				if (p != -1) {
+					edgesRemaining.splice(p, 1);
+				}
+				
 				if (!options.edgeSelector(e)) return;
 				
 				options.edgeCallback(e);
@@ -195,6 +206,16 @@ Graph.prototype = {
 				if (e.target == v) stack.push(e.source);
 			});
 		}
+		
+		console.log([verticesRemaining, edgesRemaining]);
+		
+		$.each(verticesRemaining, function (id, v) {
+			options.notVertexCallback(v);
+		});
+		
+		$.each(edgesRemaining, function (i, e) {
+			options.notEdgeCallback(e);
+		});
 	}
 };
 
@@ -224,6 +245,16 @@ GraphVertex.prototype = {
 			this.element.show();
 		}
 	},
+	
+	highlight: function () {
+		this.options.highlighted = true;
+		this.draw();
+	},
+	
+	unhighlight: function () {
+		this.options.highlighted = false;
+		this.draw();
+	},
 
 	draw: function () {
 		var vertex = this;
@@ -244,13 +275,15 @@ GraphVertex.prototype = {
 			
 			var startX = 0;
 			var startY = 0;
-			circ.drag(function (dx, dy) {
+			circ.drag(function (dx, dy, x, y, event) {
+				if (event.ctrlKey || event.shiftKey) return;
+				
 				vertex.positionX = graph.scale.unscaleX(startX + dx / graph.zoom);
 				vertex.positionY = graph.scale.unscaleY(startY + dy / graph.zoom);
 				vertex.draw();
 				
 				$.each(vertex.edges, function (i, e) { e.draw(); });
-			}, function () {
+			}, function (x, y, event) {
 				startX = graph.scale.scaleX(vertex.positionX);
 				startY = graph.scale.scaleY(vertex.positionY);
 			});
@@ -260,8 +293,15 @@ GraphVertex.prototype = {
 		}
 		
 		circ.attr({ 'cx': x, 'cy': y });
-		circ.attr({ 'fill': '#ffffff', 'stroke': '#dddddd', 'stroke-width': 3, 'title': vertex.options.label });
+		circ.attr({ 'fill': '#ffffff', 'title': vertex.options.label });
 		circ.attr({ 'fill-opacity': vertex.options.opacity, 'stroke-opacity': vertex.options.opacity });
+		
+		
+		if (vertex.options.highlighted) {
+			circ.attr({ 'stroke': '#ff0000', 'stroke-width': 6 });
+		} else {
+			circ.attr({ 'stroke': '#dddddd', 'stroke-width': 3 });
+		}
 	}
 };
 
@@ -288,6 +328,16 @@ GraphEdge.prototype = {
 		if (this.element != null) {
 			this.element.show();
 		}
+	},
+	
+	highlight: function () {
+		this.options.highlighted = true;
+		this.draw();
+	},
+	
+	unhighlight: function () {
+		this.options.highlighted = false;
+		this.draw();
 	},
 
 	draw: function () {
@@ -316,7 +366,7 @@ GraphEdge.prototype = {
 		}
 
 		line.attr('path', 'M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
-		line.attr({ 'stroke-width': 3, 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
+		line.attr({ 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
 		if (edge.options.type == 0) {
 			line.attr({ 'stroke-dasharray': '- ' });
 		}
@@ -325,5 +375,11 @@ GraphEdge.prototype = {
 		}
 		edge.element = line;
 		if (edge.options.visible != true) edge.element.hide();
+		
+		if (edge.options.highlighted) {
+			line.attr({ 'stroke-width': 6 });
+		} else {
+			line.attr({ 'stroke-width': 3 });
+		}
 	}
 };

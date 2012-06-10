@@ -34,7 +34,7 @@ GraphLayout.WeakOrdering = {
 		});
 		
 		var edgeColors = {};
-		var colorHelper = new ColorHelper(0.7, 0.99);
+		var colorHelper = new ColorHelper(0.6, 0.99);
 		
 		$.each(graph.edges, function(i, e) {
 			if (!edgeColors[e.options.label]) {
