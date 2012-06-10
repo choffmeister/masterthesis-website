@@ -14,7 +14,9 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
     </div>
     <div id="controls" class="workspace-controls">
         <div>
-        	$\rho \in [$ <input id="rho-range" type="text" data-workspace-changebind="changerho" value="0,4" style="width: 65px;" /> $]$
+        	<div class="input-prepend" style="padding: 1px; margin: 0;">
+                <span class="add-on" style="width: 40px;">$\rho \in$</span><input class="span2" id="rho-range" size="16" type="text" style="width: 76px;" data-workspace-changebind="changerho" value="0,4" />
+            </div>
     	</div>
     	<div id="generators-control">
     	</div>
