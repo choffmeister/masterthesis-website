@@ -14,7 +14,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
     </div>
     <div id="controls" class="workspace-controls">
         <div>
-        	$\rho \in [$ <input id="rho-range" type="text" data-workspace-changebind="redraw" value="0,4" style="width: 65px;" /> $]$
+        	$\rho \in [$ <input id="rho-range" type="text" data-workspace-changebind="changerho" value="0,4" style="width: 65px;" /> $]$
     	</div>
     	<div id="generators-control">
     	</div>
@@ -34,10 +34,8 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
     	var verticesRaw = [];
     	var edgesRaw = [];
 
-    	var redraw = function () {
-    		graph.clear();
-
-    		var rhoRange = $('#rho-range').val().split(/,/);
+        var toggleRhoLayers = function () {
+            var rhoRange = $('#rho-range').val().split(/,/);
     		if (rhoRange.length != 2 || isNaN(rhoRange[0].trim()) || isNaN(rhoRange[1].trim())) {
     			alert("Please enter a range like [0,10]");
     			return;
@@ -45,31 +43,24 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
     		var rhoMin = parseInt(rhoRange[0].trim());
     		var rhoMax = parseInt(rhoRange[1].trim());
 
-            $.each(verticesRaw, function (i, v) {
-    	    	if (v[0] < rhoMin || v[0] > rhoMax) return;
-
-    	        graph.addVertex(v[1], { label: v[1], twistedLength: v[0], click: function(vertex, event) {
-    	        	if (event.ctrlKey) {
-    	        		vertex.highlight();
-    	        	} else if (event.shiftKey) {
-    	        		vertex.unhighlight();
-    	        	}
-    	        }});
+            $.each(graph.vertices, function (i, v) {
+    	    	if (v.options.twistedLength < rhoMin || v.options.twistedLength > rhoMax) {
+    	    	    v.disable();
+    	    	} else {
+    	    	    v.enable();
+    	    	}
     		});
 
-    	    $.each(edgesRaw, function (i, e) {
-    	    	var source = verticesRaw[e[0]];
-    	    	var target = verticesRaw[e[1]];
-
-    			if (source[0] < rhoMin || source[0] > rhoMax || target[0] < rhoMin || target[0] > rhoMax) return;
-
-    	        graph.addEdge(source[1], target[1], { label: e[2], type: e[3] });
+    	    $.each(graph.edges, function (i, e) {
+    			if (e.source.options.twistedLength < rhoMin || e.source.options.twistedLength > rhoMax ||
+        			e.target.options.twistedLength < rhoMin || e.target.options.twistedLength > rhoMax)
+    			{
+    			    e.disable();
+    			} else {
+    			    e.enable();
+    			}
     	    });
-
-    	    GraphLayout.WeakOrdering.layout(graph);
-    		graph.resetViewPort();
-    	    graph.draw();
-    	};
+        };
 
         $.ajax('/api/v1/weakordering/{{ automorphism.id }}/graph', {
             dataType: 'json',
@@ -105,6 +96,9 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                     },
                     redraw: function () {
                     	redraw();
+                    },
+                    changerho: function () {
+                    	toggleRhoLayers();
                     },
                     showconnections: function () {
                         var selection = [];
@@ -143,8 +137,28 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                     }
                 });
 
-    			redraw();
-    			console.log(graph);
+                $.each(verticesRaw, function (i, v) {
+        	        graph.addVertex(v[1], { label: v[1], twistedLength: v[0], disabled: true, click: function(vertex, event) {
+        	        	if (event.ctrlKey) {
+        	        		vertex.highlight();
+        	        	} else if (event.shiftKey) {
+        	        		vertex.unhighlight();
+        	        	}
+        	        }});
+        		});
+
+        	    $.each(edgesRaw, function (i, e) {
+        	    	var source = verticesRaw[e[0]];
+        	    	var target = verticesRaw[e[1]];
+
+        	        graph.addEdge(source[1], target[1], { label: e[2], type: e[3], disabled: true });
+        	    });
+
+        	    toggleRhoLayers();
+        	    console.log(graph);
+        	    GraphLayout.WeakOrdering.layout(graph);
+        		graph.resetViewPort();
+        	    graph.draw();
 
                 $.each(generatorsRaw, function (gIndex, g) {
                 	var showButton = $('<button class="btn" style="width: 50%; color: ' + graph.edgeColors[gIndex+1] + ';">+ ' + g + '</button>');

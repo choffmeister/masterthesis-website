@@ -227,6 +227,7 @@ GraphVertex = function (graph, id, options) {
 	this.edges = [];
 	this.options = options;
 	this.element = null;
+	this.enabled = options.disabled ? false : true;
 	this.visibility = { 0: options.visible ? true : false };
 };
 
@@ -256,6 +257,8 @@ GraphVertex.prototype = {
 	},
 	
 	isVisible: function () {
+		if (!this.enabled) return false;
+		
 		var result = true;
 		
 		$.each(this.visibility, function (order, value) {
@@ -265,6 +268,22 @@ GraphVertex.prototype = {
 		});
 		
 		return result;
+	},
+	
+	enable: function () {
+		if (!this.enabled) {
+			this.enabled = true;
+			this.draw();
+		}
+	},
+	
+	disable: function () {
+		this.enabled = false;
+		
+		if (this.element) {
+			this.element.remove();
+			this.element = null;
+		}
 	},
 	
 	highlight: function () {
@@ -281,6 +300,8 @@ GraphVertex.prototype = {
 		var vertex = this;
 		var graph = vertex.graph;
 		var canvas = graph.canvas;
+		
+		if (!vertex.enabled) return;
 
 		var x = graph.scale.scaleX(vertex.positionX);
 		var y = graph.scale.scaleY(vertex.positionY);
@@ -289,6 +310,7 @@ GraphVertex.prototype = {
 		
 		if (circ == null) {
 			circ = canvas.circle(x, y, 10);
+			circ.toFront();
 
 			if (vertex.options.click) circ.click(function (event) {
 				vertex.options.click(vertex, event);
@@ -331,6 +353,7 @@ GraphEdge = function (graph, sourceVertex, targetVertex, options) {
 	this.target = targetVertex;
 	this.options = options;
 	this.element = null;
+	this.enabled = options.disabled ? false : true;
 	this.visibility = { 0: options.visible ? true : false };
 };
 
@@ -360,6 +383,8 @@ GraphEdge.prototype = {
 	},
 	
 	isVisible: function () {
+		if (!this.enabled) return false;
+		
 		var result = true;
 		
 		$.each(this.visibility, function (order, value) {
@@ -369,6 +394,22 @@ GraphEdge.prototype = {
 		});
 		
 		return result;
+	},
+	
+	enable: function () {
+		if (!this.enabled) {
+			this.enabled = true;
+			this.draw();
+		}
+	},
+	
+	disable: function () {
+		this.enabled = false;
+		
+		if (this.element) {
+			this.element.remove();
+			this.element = null;
+		}
 	},
 	
 	highlight: function () {
@@ -404,6 +445,7 @@ GraphEdge.prototype = {
 		
 		if (line == null) {
 			var line = canvas.path('M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
+			line.toBack();
 		}
 
 		line.attr('path', 'M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
