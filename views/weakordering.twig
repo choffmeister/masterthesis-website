@@ -27,148 +27,158 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
     </div>
 </div>
 <script type="text/javascript">
-$(function () {
-	var graph = null;
-	var generatorsRaw = [];
-	var verticesRaw = [];
-	var edgesRaw = [];
+(function ($) {
+    $(function () {
+    	var graph = null;
+    	var generatorsRaw = [];
+    	var verticesRaw = [];
+    	var edgesRaw = [];
 
-	var redraw = function () {
-		graph.clear();
+    	var redraw = function () {
+    		graph.clear();
 
-		var rhoRange = $('#rho-range').val().split(/,/);
-		if (rhoRange.length != 2 || isNaN(rhoRange[0].trim()) || isNaN(rhoRange[1].trim())) {
-			alert("Please enter a range like [0,10]");
-			return;
-		}
-		var rhoMin = parseInt(rhoRange[0].trim());
-		var rhoMax = parseInt(rhoRange[1].trim());
+    		var rhoRange = $('#rho-range').val().split(/,/);
+    		if (rhoRange.length != 2 || isNaN(rhoRange[0].trim()) || isNaN(rhoRange[1].trim())) {
+    			alert("Please enter a range like [0,10]");
+    			return;
+    		}
+    		var rhoMin = parseInt(rhoRange[0].trim());
+    		var rhoMax = parseInt(rhoRange[1].trim());
 
-        $.each(verticesRaw, function (i, v) {
-	    	if (v[0] < rhoMin || v[0] > rhoMax) return;
+            $.each(verticesRaw, function (i, v) {
+    	    	if (v[0] < rhoMin || v[0] > rhoMax) return;
 
-	        graph.addVertex(v[1], { label: v[1], twistedLength: v[0], click: function(vertex, event) {
-	        	if (event.ctrlKey) {
-	        		vertex.highlight();
-	        	} else if (event.shiftKey) {
-	        		vertex.unhighlight();
-	        	}
-	        }});
-		});
+    	        graph.addVertex(v[1], { label: v[1], twistedLength: v[0], click: function(vertex, event) {
+    	        	if (event.ctrlKey) {
+    	        		vertex.highlight();
+    	        	} else if (event.shiftKey) {
+    	        		vertex.unhighlight();
+    	        	}
+    	        }});
+    		});
 
-	    $.each(edgesRaw, function (i, e) {
-	    	var source = verticesRaw[e[0]];
-	    	var target = verticesRaw[e[1]];
+    	    $.each(edgesRaw, function (i, e) {
+    	    	var source = verticesRaw[e[0]];
+    	    	var target = verticesRaw[e[1]];
 
-			if (source[0] < rhoMin || source[0] > rhoMax || target[0] < rhoMin || target[0] > rhoMax) return;
+    			if (source[0] < rhoMin || source[0] > rhoMax || target[0] < rhoMin || target[0] > rhoMax) return;
 
-	        graph.addEdge(source[1], target[1], { label: e[2], type: e[3] });
-	    });
+    	        graph.addEdge(source[1], target[1], { label: e[2], type: e[3] });
+    	    });
 
-	    GraphLayout.WeakOrdering.layout(graph);
-		graph.resetViewPort();
-	    graph.draw();
-	};
+    	    GraphLayout.WeakOrdering.layout(graph);
+    		graph.resetViewPort();
+    	    graph.draw();
+    	};
 
-    $.ajax('/api/v1/weakordering/{{ automorphism.id }}/graph', {
-        dataType: 'json',
-        method: 'GET',
-        success: function (data) {
-            if (data === false) {
-                $('#canvas').html('Weak ordering has not been calculated yet!');
-                return;
-            }
-
-			generatorsRaw = data[0];
-            verticesRaw = data[1];
-            edgesRaw = data[2];
-
-            graph = new Graph($('#canvas')[0]);
-
-            $('#workspace').workspace({
-                toggleFullscreen: function () { graph.updateViewPort(); },
-                resetViewPort: function () { graph.resetViewPort(); },
-                zoomIn: function () { graph.zoomIn(); },
-                zoomOut: function () { graph.zoomOut(); },
-                panUp: function () { graph.panUp(); },
-                panDown: function () { graph.panDown(); },
-                panLeft: function () { graph.panLeft(); },
-                panRight: function () { graph.panRight(); },
-
-                reset: function () {
-                	GraphLayout.WeakOrdering.layout(graph);
-                	graph.draw();
-                },
-                unhide: function () {
-                    graph.showAll();
-                },
-                redraw: function () {
-                	redraw();
-                },
-                showconnections: function () {
-                    var selection = [];
-
-                    $.each(graph.vertices, function (i, v) {
-                        if (v.options.highlighted) {
-                            selection.push(v);
-                        }
-                    });
-
-                    if (selection.length != 2) {
-                        alert('Please select exactly two elements by ctrl-clicking nodes before using this function.');
-                        return;
-                    }
-
-                    var first = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[0] : selection[1];
-                    var second = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[1] : selection[0];
-
-                    graph.showAll();
-                    graph.walk(first, {
-                    	notVertexCallback: function (v) {
-                        	v.hide();
-                    	},
-                    	notEdgeCallback: function (e) {
-                    	    e.hide();
-                        }
-                    });
-                    graph.walk(second, {
-                        direction: -1,
-                    	notVertexCallback: function (v) {
-                        	v.hide();
-                    	},
-                    	notEdgeCallback: function (e) {
-                    	    e.hide();
-                        }
-                    });
+        $.ajax('/api/v1/weakordering/{{ automorphism.id }}/graph', {
+            dataType: 'json',
+            method: 'GET',
+            success: function (data) {
+                if (data === false) {
+                    $('#canvas').html('Weak ordering has not been calculated yet!');
+                    return;
                 }
-            });
 
-			redraw();
-			console.log(graph);
-            $.each(generatorsRaw, function (i, g) {
-            	$('#generators-control').append('<div style="width: 50%;"><input type="checkbox" data-generator="' + (i + 1) + '" checked="checked" /> ' +
-            		'<span style="font-weight: bold; color: ' + graph.edgeColors[i+1] + ';">' + g + '</span></div>');
-            });
-			$('#generators-control input[type=checkbox]').change(function () {
-            	var generators = [];
+    			generatorsRaw = data[0];
+                verticesRaw = data[1];
+                edgesRaw = data[2];
 
-            	$('#generators-control input[type=checkbox]:checked').each(function () {
-            		generators.push(parseInt($(this).attr('data-generator')));
-            	});
+                graph = new Graph($('#canvas')[0]);
 
-            	$.each(graph.edges, function (i, e) {
-            		if ($.inArray(e.options.label, generators) != -1) {
-            			e.show();
-            		} else {
-            			e.hide();
-            		}
-            	});
-			});
-        },
-        error: function (err) {
-            alert(err);
-        }
+                $('#workspace').workspace({
+                    toggleFullscreen: function () { graph.updateViewPort(); },
+                    resetViewPort: function () { graph.resetViewPort(); },
+                    zoomIn: function () { graph.zoomIn(); },
+                    zoomOut: function () { graph.zoomOut(); },
+                    panUp: function () { graph.panUp(); },
+                    panDown: function () { graph.panDown(); },
+                    panLeft: function () { graph.panLeft(); },
+                    panRight: function () { graph.panRight(); },
+
+                    reset: function () {
+                    	GraphLayout.WeakOrdering.layout(graph);
+                    	graph.draw();
+                    },
+                    unhide: function () {
+                        graph.showAll();
+                    },
+                    redraw: function () {
+                    	redraw();
+                    },
+                    showconnections: function () {
+                        var selection = [];
+
+                        $.each(graph.vertices, function (i, v) {
+                            if (v.options.highlighted) {
+                                selection.push(v);
+                            }
+                        });
+
+                        if (selection.length != 2) {
+                            alert('Please select exactly two elements by ctrl-clicking nodes before using this function.');
+                            return;
+                        }
+
+                        var first = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[0] : selection[1];
+                        var second = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[1] : selection[0];
+
+                        graph.walk(first, {
+                        	notVertexCallback: function (v) {
+                            	v.hide();
+                        	},
+                        	notEdgeCallback: function (e) {
+                        	    e.hide();
+                            }
+                        });
+                        graph.walk(second, {
+                            direction: -1,
+                        	notVertexCallback: function (v) {
+                            	v.hide();
+                        	},
+                        	notEdgeCallback: function (e) {
+                        	    e.hide();
+                            }
+                        });
+                    }
+                });
+
+    			redraw();
+    			console.log(graph);
+
+                $.each(generatorsRaw, function (gIndex, g) {
+                	var showButton = $('<button class="btn" style="width: 50%; color: ' + graph.edgeColors[gIndex+1] + ';">+ ' + g + '</button>');
+                	var hideButton = $('<button class="btn" style="width: 50%; color: ' + graph.edgeColors[gIndex+1] + ';">- ' + g + '</button>');
+
+                    showButton.click(function () {
+                        $.each(graph.edges, function (i, e) {
+                            if (e.options.label == gIndex + 1) {
+                                if (e.options.visible && e.element != null) {
+                                    e.element.show();
+                                }
+                            }
+                        });
+                    });
+
+                    hideButton.click(function () {
+                        $.each(graph.edges, function (i, e) {
+                            if (e.options.label == gIndex + 1) {
+                                if (e.element != null) {
+                                    e.element.hide();
+                                }
+                            }
+                        });
+                    });
+
+                	$('#generators-control').append(showButton).append(hideButton);
+                });
+            },
+            error: function (err) {
+                console.log(err);
+                alert(err);
+            }
+        });
     });
-});
+})(jQuery);
 </script>
 {% endblock %}
