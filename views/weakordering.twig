@@ -10,6 +10,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
         <div>
             <button class="btn" data-workspace-clickbind="reset">Reset positions</button>
             <button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
+            <button class="btn" data-workspace-clickbind="unselect">Unselect all</button>
         </div>
     </div>
     <div id="controls" class="workspace-controls">
@@ -21,7 +22,8 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
     	<div id="generators-control">
     	</div>
     	<div>
-    	    <button class="btn" data-workspace-clickbind="showconnections">Show connections</button>
+    	    <button class="btn" data-workspace-clickbind="hideUnconnecting">Hide unconnecting</button>
+    	    <button class="btn" data-workspace-clickbind="hideUnselected">Hide unselected</button>
     	</div>
     </div>
     <div id="content" class="workspace-content">
@@ -97,13 +99,17 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                     	$('#generators-control button').addClass('active');
                         graph.showAll(-1);
                     },
+                    unselect: function () {
+                        $.each(graph.edges, function (i, e) { e.unhighlight(); });
+                        $.each(graph.vertices, function (i, v) { v.unhighlight(); });
+                    },
                     redraw: function () {
                     	redraw();
                     },
                     changerho: function () {
                     	toggleRhoLayers();
                     },
-                    showconnections: function () {
+                    hideUnconnecting: function () {
                         var selection = [];
 
                         $.each(graph.vertices, function (i, v) {
@@ -132,6 +138,14 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                         	    e.hide(50);
                             }
                         });
+                    },
+                    hideUnselected: function () {
+                    	graph.showAllEdges(50);
+                        $.each(graph.edges, function (i, e) {
+                            if (!e.options.highlighted) {
+                                e.hide(50);
+                            }
+                        });
                     }
                 });
 
@@ -141,11 +155,35 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
             	        twistedLength: v[0],
             	        disabled: true,
             	        dblclick: function(vertex, event) {
-            	            if (vertex.options.highlighted) {
-            	            	vertex.unhighlight();
-            	            } else {
-            	            	vertex.highlight();
-            	            }
+                	        if (!event.ctrlKey) {
+                	            if (vertex.options.highlighted) {
+                	            	vertex.unhighlight();
+                	            } else {
+                	            	vertex.highlight();
+                	            }
+                	        } else {
+                	            graph.walk(vertex, {
+                    	            direction: 0,
+                    				edgeSelector: function (e) {
+                    					return e.isVisible();
+                    				},
+                    				vertexSelector: function (v) {
+                    					return v.isVisible();
+                    				},
+                    				edgeCallback: function (e) {
+                        				e.highlight();
+                    				},
+                    				vertexCallback: function (v) {
+                        				v.highlight()
+                    				},
+                    				notEdgeCallback: function (e) {
+                        				e.unhighlight();
+                    				},
+                    				notVertexCallback: function (v) {
+                    				    v.unhighlight();
+                    				}
+                	            });
+                	        }
             	        }
         	        });
         		});

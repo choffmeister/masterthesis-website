@@ -3,6 +3,9 @@ Graph = function (element) {
 	
 	graph.element = element;
 	graph.canvas = Raphael(graph.element);
+	graph.edgesAnchor = graph.canvas.rect();
+	graph.verticesAnchor = graph.canvas.rect();
+	graph.frontAnchor = graph.canvas.rect();
 	graph.vertices = {};
 	graph.edges = [];
 	graph.scale = new GraphScale.None();
@@ -175,7 +178,7 @@ Graph.prototype = {
 			edgeSelector: function (e) {
 				return true;
 			},
-			vertexSelector: function (e) {
+			vertexSelector: function (v) {
 				return true;
 			},
 			edgeCallback: function (e) {
@@ -303,13 +306,22 @@ GraphVertex.prototype = {
 	},
 	
 	highlight: function () {
-		this.options.highlighted = true;
-		this.draw();
+		if (!this.options.highlighted) {
+			this.options.highlighted = true;
+			
+			if (this.element) {
+				this.element.insertBefore(this.graph.frontAnchor);
+			}
+			
+			this.draw();
+		}
 	},
 	
 	unhighlight: function () {
-		this.options.highlighted = false;
-		this.draw();
+		if (this.options.highlighted) {
+			this.options.highlighted = false;
+			this.draw();
+		}
 	},
 
 	draw: function () {
@@ -326,7 +338,7 @@ GraphVertex.prototype = {
 		
 		if (circ == null) {
 			circ = canvas.circle(x, y, 10);
-			circ.toFront();
+			circ.insertBefore(graph.frontAnchor);
 
 			if (vertex.options.click) circ.click(function (event) {
 				vertex.options.click(vertex, event);
@@ -433,13 +445,22 @@ GraphEdge.prototype = {
 	},
 	
 	highlight: function () {
-		this.options.highlighted = true;
-		this.draw();
+		if (!this.options.highlighted) {
+			this.options.highlighted = true;
+			
+			if (this.element) {
+				this.element.insertBefore(this.graph.verticesAnchor);
+			}
+			
+			this.draw();
+		}
 	},
 	
 	unhighlight: function () {
-		this.options.highlighted = false;
-		this.draw();
+		if (this.options.highlighted) {
+			this.options.highlighted = false;
+			this.draw();
+		}
 	},
 
 	draw: function () {
@@ -467,7 +488,7 @@ GraphEdge.prototype = {
 		
 		if (line == null) {
 			var line = canvas.path('M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
-			line.toBack();
+			line.insertBefore(graph.verticesAnchor);
 		}
 
 		line.attr('path', 'M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
