@@ -107,7 +107,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
                         var selection = [];
 
                         $.each(graph.vertices, function (i, v) {
-                            if (v.options.highlighted) {
+                            if (v.options.highlighted && v.isVisible()) {
                                 selection.push(v);
                             }
                         });
