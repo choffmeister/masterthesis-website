@@ -6,259 +6,294 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 
 {% block content %}
 <div id="workspace" class="workspace">
-    <div id="controls" class="workspace-controls">
-        <div>
-            <button class="btn" data-workspace-clickbind="reset">Reset positions</button>
-            <button class="btn" data-workspace-clickbind="unselect">Unselect all</button>
-            <button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
-        </div>
-    </div>
-    <div id="controls" class="workspace-controls">
-        <div>
-        	<div class="input-prepend" style="padding: 1px; margin: 0;">
-                <span class="add-on" style="width: 40px;">$\rho \in$</span><input class="span2" id="rho-range" size="16" type="text" style="width: 76px;" data-workspace-changebind="changerho" value="0,4" />
-            </div>
-    	</div>
-    	<div id="generators-control">
-    	</div>
-    	<div>
-    	    <button class="btn" data-workspace-clickbind="highlightConnecting">Highlight connecting</button>
-    	    <button class="btn" data-workspace-clickbind="hideUnselected">Hide unselected</button>
-    	</div>
-    </div>
-    <div id="content" class="workspace-content">
-       <div id="canvas"></div>
-    </div>
+	<div id="controls" class="workspace-controls">
+		<div>
+			<button class="btn" data-workspace-clickbind="reset">Reset positions</button>
+			<button class="btn" data-workspace-clickbind="unselect">Unselect all</button>
+			<button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
+		</div>
+	</div>
+	<div id="controls" class="workspace-controls">
+		<div>
+			<div class="input-prepend" style="padding: 1px; margin: 0;">
+				<span class="add-on" style="width: 40px;">$\rho \in$</span><input class="span2" id="rho-range" size="16" type="text" style="width: 76px;" data-workspace-changebind="changerho" value="0,4" />
+			</div>
+		</div>
+		<div id="generators-control">
+		</div>
+		<div>
+			<button class="btn" data-workspace-clickbind="highlightConnecting">Highlight connecting</button>
+			<button class="btn" data-workspace-clickbind="hideUnselected">Hide unselected</button>
+		</div>
+	</div>
+	<div id="content" class="workspace-content">
+	   <div id="canvas"></div>
+	</div>
 </div>
 <script type="text/javascript">
 (function ($) {
-    $(function () {
-    	var graph = null;
-    	var generatorsRaw = [];
-    	var verticesRaw = [];
-    	var edgesRaw = [];
+	$(function () {
+		var graph = null;
+		var generatorsRaw = [];
+		var verticesRaw = [];
+		var edgesRaw = [];
 
-        var toggleRhoLayers = function () {
-            var rhoRange = $('#rho-range').val().split(/,/);
-    		if (rhoRange.length != 2 || isNaN(rhoRange[0].trim()) || isNaN(rhoRange[1].trim())) {
-    			alert("Please enter a range like [0,10]");
-    			return;
-    		}
-    		var rhoMin = parseInt(rhoRange[0].trim());
-    		var rhoMax = parseInt(rhoRange[1].trim());
+		var toggleRhoLayers = function () {
+			var rhoRange = $('#rho-range').val().split(/,/);
+			if (rhoRange.length != 2 || isNaN(rhoRange[0].trim()) || isNaN(rhoRange[1].trim())) {
+				alert("Please enter a range like [0,10]");
+				return;
+			}
+			var rhoMin = parseInt(rhoRange[0].trim());
+			var rhoMax = parseInt(rhoRange[1].trim());
 
-            $.each(graph.vertices, function (i, v) {
-    	    	if (v.options.twistedLength < rhoMin || v.options.twistedLength > rhoMax) {
-    	    	    v.disable();
-    	    	} else {
-    	    	    v.enable();
-    	    	}
-    		});
+			$.each(graph.vertices, function (i, v) {
+				if (v.options.twistedLength < rhoMin || v.options.twistedLength > rhoMax) {
+					v.disable();
+				} else {
+					v.enable();
+				}
+			});
 
-    	    $.each(graph.edges, function (i, e) {
-    			if (e.source.options.twistedLength < rhoMin || e.source.options.twistedLength > rhoMax ||
-        			e.target.options.twistedLength < rhoMin || e.target.options.twistedLength > rhoMax)
-    			{
-    			    e.disable();
-    			} else {
-    			    e.enable();
-    			}
-    	    });
-        };
+			$.each(graph.edges, function (i, e) {
+				if (e.source.options.twistedLength < rhoMin || e.source.options.twistedLength > rhoMax ||
+					e.target.options.twistedLength < rhoMin || e.target.options.twistedLength > rhoMax)
+				{
+					e.disable();
+				} else {
+					e.enable();
+				}
+			});
+		};
 
-        $.ajax('/api/v1/weakordering/{{ automorphism.id }}/graph', {
-            dataType: 'json',
-            method: 'GET',
-            success: function (data) {
-                if (data === false) {
-                    $('#canvas').html('Weak ordering has not been calculated yet!');
-                    return;
-                }
+		$.ajax('/api/v1/weakordering/{{ automorphism.id }}/graph', {
+			dataType: 'json',
+			method: 'GET',
+			success: function (data) {
+				if (data === false) {
+					$('#canvas').html('Weak ordering has not been calculated yet!');
+					return;
+				}
 
-    			generatorsRaw = data[0];
-                verticesRaw = data[1];
-                edgesRaw = data[2];
+				generatorsRaw = data[0];
+				verticesRaw = data[1];
+				edgesRaw = data[2];
 
-                graph = new Graph($('#canvas')[0]);
+				graph = new Graph($('#canvas')[0]);
 
-                $('#workspace').workspace({
-                    toggleFullscreen: function () { graph.updateViewPort(); },
-                    resetViewPort: function () { graph.resetViewPort(); },
-                    zoomIn: function () { graph.zoomIn(); },
-                    zoomOut: function () { graph.zoomOut(); },
-                    panUp: function () { graph.panUp(); },
-                    panDown: function () { graph.panDown(); },
-                    panLeft: function () { graph.panLeft(); },
-                    panRight: function () { graph.panRight(); },
+				$('#workspace').workspace({
+					toggleFullscreen: function () { graph.updateViewPort(); },
+					resetViewPort: function () { graph.resetViewPort(); },
+					zoomIn: function () { graph.zoomIn(); },
+					zoomOut: function () { graph.zoomOut(); },
+					panUp: function () { graph.panUp(); },
+					panDown: function () { graph.panDown(); },
+					panLeft: function () { graph.panLeft(); },
+					panRight: function () { graph.panRight(); },
 
-                    reset: function () {
-                    	GraphLayout.WeakOrdering.layout(graph);
-                    	graph.draw();
-                    },
-                    unhide: function () {
-                    	$('#generators-control button').addClass('active');
-                        graph.showAll(-1);
-                    },
-                    unselect: function () {
-                        $.each(graph.edges, function (i, e) { e.unhighlight(); });
-                        $.each(graph.vertices, function (i, v) { v.unhighlight(); });
-                    },
-                    redraw: function () {
-                    	redraw();
-                    },
-                    changerho: function () {
-                    	toggleRhoLayers();
-                    },
-                    highlightConnecting: function () {
-                        var selection = [];
+					reset: function () {
+						GraphLayout.WeakOrdering.layout(graph);
+						graph.draw();
+					},
+					unhide: function () {
+						$('#generators-control button').addClass('active');
+						graph.showAll(-1);
+					},
+					unselect: function () {
+						$.each(graph.edges, function (i, e) { e.unhighlight(); });
+						$.each(graph.vertices, function (i, v) { v.unhighlight(); });
+					},
+					redraw: function () {
+						redraw();
+					},
+					changerho: function () {
+						toggleRhoLayers();
+					},
+					highlightConnecting: function () {
+						var selection = [];
 
-                        $.each(graph.vertices, function (i, v) {
-                            if (v.options.highlighted && v.isVisible()) {
-                                selection.push(v);
-                            }
-                        });
+						$.each(graph.vertices, function (i, v) {
+							if (v.options.highlighted && v.isVisible()) {
+								selection.push(v);
+							}
+						});
 
-                        if (selection.length != 2) {
-                            alert('Please select exactly two elements by double clicking nodes before using this function.');
-                            return;
-                        }
+						if (selection.length != 2) {
+							alert('Please select exactly two elements by double clicking nodes before using this function.');
+							return;
+						}
 
-                        var first = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[0] : selection[1];
-                        var second = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[1] : selection[0];
+						var first = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[0] : selection[1];
+						var second = selection[0].options.twistedLength < selection[1].options.twistedLength ? selection[1] : selection[0];
 
-                        $.each(graph.edges, function (i, e) { e.unhighlight(); });
+						$.each(graph.edges, function (i, e) { e.unhighlight(); });
 
-                        var connectingVertices = [];
+						var connectingVertices = [];
 
-                        graph.walk(first, {
-                        	vertexCallback: function (v) {
-                        		connectingVertices.push(v);
-                            }
-                        });
-                        graph.walk(second, {
-                            direction: -1,
-                        	notVertexCallback: function (v) {
-                        	    var pos = $.inArray(v, connectingVertices);
+						graph.walk(first, {
+							vertexCallback: function (v) {
+								connectingVertices.push(v);
+							}
+						});
+						graph.walk(second, {
+							direction: -1,
+							notVertexCallback: function (v) {
+								var pos = $.inArray(v, connectingVertices);
 
-                        	    if (pos > -1) {
-                        	    	connectingVertices.splice(pos, 1);
-                        	    }
-                            }
-                        });
+								if (pos > -1) {
+									connectingVertices.splice(pos, 1);
+								}
+							}
+						});
 
-                        $.each(connectingVertices, function (i, v) {
-                            v.highlight();
-        	            	$.each(v.edges, function (i, e) {
-            	            	if (e.source.options.highlighted && e.target.options.highlighted) {
-            	            	    e.highlight();
-            	            	}
-            	            });
-                        });
-                    },
-                    hideUnselected: function () {
-                    	graph.showAllEdges(50);
-                        $.each(graph.edges, function (i, e) {
-                            if (!e.source.options.highlighted || !e.target.options.highlighted) {
-                                e.hide(50);
-                            }
-                        });
-                        $.each(graph.edges, function (i, e) { e.unhighlight(); });
-                        $.each(graph.vertices, function (i, v) { v.unhighlight(); });
-                    }
-                });
+						$.each(connectingVertices, function (i, v) {
+							v.highlight();
+							$.each(v.edges, function (i, e) {
+								if (e.source.options.highlighted && e.target.options.highlighted) {
+									e.highlight();
+								}
+							});
+						});
+					},
+					hideUnselected: function () {
+						graph.showAllEdges(50);
+						$.each(graph.edges, function (i, e) {
+							if (!e.source.options.highlighted || !e.target.options.highlighted) {
+								e.hide(50);
+							}
+						});
+						$.each(graph.edges, function (i, e) { e.unhighlight(); });
+						$.each(graph.vertices, function (i, v) { v.unhighlight(); });
+					}
+				});
 
-                $.each(verticesRaw, function (i, v) {
-        	        graph.addVertex(v[1], {
-            	        label: v[1],
-            	        twistedLength: v[0],
-            	        disabled: true,
-            	        click: function (vertex, event) {
-            	            if (!event.ctrlKey) {
-                	            if (vertex.options.highlighted) {
-                	            	vertex.unhighlight();
-                	            	$.each(vertex.edges, function (i, e) {
-                	            	    e.unhighlight();
-                    	            });
-                	            } else {
-                	            	vertex.highlight();
-                	            	$.each(vertex.edges, function (i, e) {
-                    	            	if (e.source.options.highlighted && e.target.options.highlighted) {
-                    	            	    e.highlight();
-                    	            	}
-                    	            });
-                	            }
-            	            }
-            	        },
-            	        dblclick: function (vertex, event) {
-            	            graph.walk(vertex, {
-                	            direction: 0,
-                				edgeSelector: function (e) {
-                					return e.isVisible();
-                				},
-                				vertexSelector: function (v) {
-                					return v.isVisible();
-                				},
-                				edgeCallback: function (e) {
-                    				e.highlight();
-                				},
-                				vertexCallback: function (v) {
-                    				v.highlight()
-                				},
-                				notEdgeCallback: function (e) {
-                    				e.unhighlight();
-                				},
-                				notVertexCallback: function (v) {
-                				    v.unhighlight();
-                				}
-            	            });
-            	        }
-        	        });
-        		});
+				var vertexDragStart = function(vertex, x, y, state, event) {
+					if (event.ctrlKey) {
+						state.selected = [];
+						$.each(graph.vertices, function (i, v) {
+							if (v.options.highlighted) {
+								state.selected.push({ vertex: v, posX: v.positionX, posY: v.positionY });
+							}
+						});
+					}
+				};
 
-        	    $.each(edgesRaw, function (i, e) {
-        	    	var source = verticesRaw[e[0]];
-        	    	var target = verticesRaw[e[1]];
+				var vertexDrag = function(vertex, dx, dy, x, y, state, event) {
+					if (event.ctrlKey) {
+						vertex.positionX = x;
+						vertex.positionY = y;
+						vertex.draw();
 
-        	        graph.addEdge(source[1], target[1], { label: e[2], type: e[3], disabled: true });
-        	    });
+						$.each(state.selected, function (i, info) {
+							info.vertex.positionX = info.posX + dx;
+							info.vertex.positionY = info.posY + dy;
+							info.vertex.draw();
+							
+							$.each(info.vertex.edges, function (i, e) { e.draw(); });
+						});
 
-        	    toggleRhoLayers();
-        	    console.log(graph);
-        	    GraphLayout.WeakOrdering.layout(graph);
-        		graph.resetViewPort();
-        	    graph.draw();
+						$.each(vertex.edges, function (i, e) { e.draw(); });
+					}
+				};
+				
+				var vertexClick = function (vertex, event) {
+					if (!event.ctrlKey) {
+						if (vertex.options.highlighted) {
+							vertex.unhighlight();
+							$.each(vertex.edges, function (i, e) {
+								e.unhighlight();
+							});
+						} else {
+							vertex.highlight();
+							$.each(vertex.edges, function (i, e) {
+								if (e.source.options.highlighted && e.target.options.highlighted) {
+									e.highlight();
+								}
+							});
+						}
+					}
+				};
+				
+				vertexDblClick = function (vertex, event) {
+					graph.walk(vertex, {
+						direction: 0,
+						edgeSelector: function (e) {
+							return e.isVisible();
+						},
+						vertexSelector: function (v) {
+							return v.isVisible();
+						},
+						edgeCallback: function (e) {
+							e.highlight();
+						},
+						vertexCallback: function (v) {
+							v.highlight()
+						},
+						notEdgeCallback: function (e) {
+							e.unhighlight();
+						},
+						notVertexCallback: function (v) {
+							v.unhighlight();
+						}
+					});
+				}
 
-                $.each(generatorsRaw, function (gIndex, g) {
-                    var colorBlock = '<div class="colorblock" style="background-color: ' + graph.edgeColors[gIndex+1] + ';"></div>';
-                	var button = $('<button class="btn active" data-toggle="button" title="Hide edges with label ' + g + '">' + colorBlock + ' ' + g + '</button>');
+				$.each(verticesRaw, function (i, v) {
+					graph.addVertex(v[1], {
+						label: v[1],
+						twistedLength: v[0],
+						disabled: true,
+						dragStart: vertexDragStart,
+						drag: vertexDrag,
+						click: vertexClick,
+						dblclick: vertexDblClick
+					});
+				});
 
-                    button.click(function () {
-                        if ($(this).hasClass('active')) {
-                            $.each(graph.edges, function (i, e) {
-                                if (e.options.label == gIndex + 1) {
-                                    e.hide(100);
-                                }
-                            });
-                        } else {
-                            $.each(graph.edges, function (i, e) {
-                                if (e.options.label == gIndex + 1) {
-                                    e.show(100);
-                                }
-                            });
-                        }
+				$.each(edgesRaw, function (i, e) {
+					var source = verticesRaw[e[0]];
+					var target = verticesRaw[e[1]];
+
+					graph.addEdge(source[1], target[1], { label: e[2], type: e[3], disabled: true });
+				});
+
+				toggleRhoLayers();
+				console.log(graph);
+				GraphLayout.WeakOrdering.layout(graph);
+				graph.resetViewPort();
+				graph.draw();
+
+				$.each(generatorsRaw, function (gIndex, g) {
+					var colorBlock = '<div class="colorblock" style="background-color: ' + graph.edgeColors[gIndex+1] + ';"></div>';
+					var button = $('<button class="btn active" data-toggle="button" title="Hide edges with label ' + g + '">' + colorBlock + ' ' + g + '</button>');
+
+					button.click(function () {
+						if ($(this).hasClass('active')) {
+							$.each(graph.edges, function (i, e) {
+								if (e.options.label == gIndex + 1) {
+									e.hide(100);
+								}
+							});
+						} else {
+							$.each(graph.edges, function (i, e) {
+								if (e.options.label == gIndex + 1) {
+									e.show(100);
+								}
+							});
+						}
 
 
-                    });
+					});
 
-                	$('#generators-control').append(button);
-                });
-            },
-            error: function (err) {
-                console.log(err);
-                alert(err);
-            }
-        });
-    });
+					$('#generators-control').append(button);
+				});
+			},
+			error: function (err) {
+				console.log(err);
+				alert(err);
+			}
+		});
+	});
 })(jQuery);
 </script>
 {% endblock %}

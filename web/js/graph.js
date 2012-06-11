@@ -345,21 +345,25 @@ GraphVertex.prototype = {
 			if (vertex.options.dblclick) circ.dblclick(function (event) {
 				vertex.options.dblclick(vertex, event);
 			});
-			
-			var startX = 0;
-			var startY = 0;
-			circ.drag(function (dx, dy, x, y, event) {
-				if (!event.ctrlKey || event.shiftKey) return;
-				
-				vertex.positionX = graph.scale.unscaleX(startX + dx / graph.zoom);
-				vertex.positionY = graph.scale.unscaleY(startY + dy / graph.zoom);
-				vertex.draw();
-				
-				$.each(vertex.edges, function (i, e) { e.draw(); });
-			}, function (x, y, event) {
-				startX = graph.scale.scaleX(vertex.positionX);
-				startY = graph.scale.scaleY(vertex.positionY);
-			});
+
+			if (vertex.options.drag) {
+				var state = {};
+				circ.drag(
+					function (dxRaw, dyRaw, xRaw, yRaw, event) {
+						var x = graph.scale.unscaleX(state.x + dxRaw / graph.zoom);
+						var y = graph.scale.unscaleY(state.y + dyRaw / graph.zoom);
+						
+						vertex.options.drag(vertex, x - state.x, y - state.y, x, y, state, event);
+					},
+					function (x, y, event) {
+						state = { x: graph.scale.scaleX(vertex.positionX), y: graph.scale.scaleY(vertex.positionY) };
+						
+						if (vertex.options.dragStart) {
+							vertex.options.dragStart(vertex, state.x, state.y, state, event);
+						}
+					}
+				);
+			}
 
 			vertex.element = circ;
 			if (vertex.isVisible() != true) vertex.element.hide();
