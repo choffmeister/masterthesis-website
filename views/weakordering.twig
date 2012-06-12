@@ -16,7 +16,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 	<div id="controls" class="workspace-controls">
 		<div>
 			<div class="input-prepend" style="padding: 1px; margin: 0;">
-				<span class="add-on" style="width: 40px;">$\rho \in$</span><input class="span2" id="rho-range" size="16" type="text" style="width: 76px;" data-workspace-changebind="changerho" value="0,4" />
+				<span class="add-on" style="width: 40px;">$\rho \in$</span><input class="span2" id="rho-range" size="16" type="text" style="width: 76px;" data-workspace-changebind="changerho" value="0,0" />
 			</div>
 		</div>
 		<div id="generators-control">
@@ -78,6 +78,9 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 				generatorsRaw = data[0];
 				verticesRaw = data[1];
 				edgesRaw = data[2];
+
+				var maxRho = verticesRaw.length <= 400 ? verticesRaw[verticesRaw.length - 1][0] : verticesRaw[400][0] - 1;
+				$('#rho-range').val('0,' + maxRho);
 
 				graph = new Graph($('#canvas')[0]);
 
@@ -188,14 +191,14 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 							info.vertex.positionX = info.posX + dx;
 							info.vertex.positionY = info.posY + dy;
 							info.vertex.draw();
-							
+
 							$.each(info.vertex.edges, function (i, e) { e.draw(); });
 						});
 
 						$.each(vertex.edges, function (i, e) { e.draw(); });
 					}
 				};
-				
+
 				var vertexClick = function (vertex, event) {
 					if (!event.ctrlKey) {
 						if (vertex.options.highlighted) {
@@ -213,7 +216,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 						}
 					}
 				};
-				
+
 				vertexDblClick = function (vertex, event) {
 					graph.walk(vertex, {
 						direction: 0,
