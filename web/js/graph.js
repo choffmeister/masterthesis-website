@@ -383,9 +383,9 @@ GraphVertex.prototype = {
 		circ.attr({ 'fill-opacity': vertex.options.opacity, 'stroke-opacity': vertex.options.opacity });
 		
 		if (vertex.options.highlighted) {
-			circ.attr({ 'stroke': '#ff0000', 'stroke-width': 6 });
+			circ.attr({ 'stroke': '#555555', 'stroke-width': 4 });
 		} else {
-			circ.attr({ 'stroke': '#dddddd', 'stroke-width': 3 });
+			circ.attr({ 'stroke': '#dddddd', 'stroke-width': 2 });
 		}
 	}
 };
@@ -505,7 +505,7 @@ GraphEdge.prototype = {
 		line.attr('path', 'M' + x1 + ',' + y1 + 'Q' + x3 + ',' + y3 + ' ' + x2 + ',' + y2);
 		line.attr({ 'fill-opacity': edge.options.opacity, 'stroke-opacity': edge.options.opacity });
 		if (edge.options.type == 0) {
-			line.attr({ 'stroke-dasharray': '- ' });
+			line.attr({ 'stroke-dasharray': '-' });
 		}
 		if (edge.options.color) {
 			line.attr({ 'stroke': edge.options.color });
@@ -514,9 +514,9 @@ GraphEdge.prototype = {
 		if (!edge.isVisible()) edge.element.hide();
 		
 		if (edge.options.highlighted) {
-			line.attr({ 'stroke-width': 6 });
+			line.attr({ 'stroke-width': 4, 'stroke': graph.edgeColorsHighlighted[edge.options.label - 1][3] });
 		} else {
-			line.attr({ 'stroke-width': 3 });
+			line.attr({ 'stroke-width': 2, 'stroke': graph.edgeColors[edge.options.label - 1][3] });
 		}
 	}
 };

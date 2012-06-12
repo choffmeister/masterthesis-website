@@ -170,7 +170,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 				});
 
 				var vertexDragStart = function(vertex, x, y, state, event) {
-					if (event.button == 0) {
+					if (event.button == 0 && (!event.ctrlKey && !event.metaKey)) {
 						state.selected = [];
 
 						vertex.highlight();
@@ -189,7 +189,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 				};
 
 				var vertexDrag = function(vertex, dx, dy, x, y, state, event) {
-					if (event.button == 0) {
+					if (event.button == 0 && (!event.ctrlKey && !event.metaKey)) {
 						vertex.positionX = x;
 						vertex.positionY = y;
 						vertex.draw();
@@ -207,18 +207,18 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 				};
 
 				var vertexClick = function (vertex, event) {
-					if (event.button == 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-						if (vertex.options.highlighted) {
-							vertex.unhighlight();
-							$.each(vertex.edges, function (i, e) {
-								e.unhighlight();
-							});
-						} else {
+					if (event.button == 0) {
+						if (!event.ctrlKey && !event.metaKey) {
 							vertex.highlight();
 							$.each(vertex.edges, function (i, e) {
 								if (e.source.options.highlighted && e.target.options.highlighted) {
 									e.highlight();
 								}
+							});
+						} else {
+							vertex.unhighlight();
+							$.each(vertex.edges, function (i, e) {
+								e.unhighlight();
 							});
 						}
 					}
@@ -287,14 +287,17 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 					}
 				});
 
-				toggleRhoLayers();
-				console.log(graph);
+				var colorHelper = new ColorHelper(0.3, 0.99);
+				graph.edgeColors = colorHelper.colorList(generatorsRaw.length, 0.3, 0.99);
+				graph.edgeColorsHighlighted = colorHelper.colorList(generatorsRaw.length, 0.7, 0.99);
+
 				GraphLayout.WeakOrdering.layout(graph);
+				toggleRhoLayers();
 				graph.resetViewPort();
 				graph.draw();
 
 				$.each(generatorsRaw, function (gIndex, g) {
-					var colorBlock = '<div class="colorblock" style="background-color: ' + graph.edgeColors[gIndex+1] + ';"></div>';
+					var colorBlock = '<div class="colorblock" style="background-color: ' + graph.edgeColorsHighlighted[gIndex][3] + ';"></div>';
 					var button = $('<button class="btn active" data-toggle="button" title="Hide edges with label ' + g + '">' + colorBlock + ' ' + g + '</button>');
 
 					button.click(function () {

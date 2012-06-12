@@ -32,18 +32,5 @@ GraphLayout.WeakOrdering = {
 				graph.vertices[vertexIndex].positionY = parseFloat(twistedLength) * 150;
 			});
 		});
-		
-		var edgeColors = {};
-		var colorHelper = new ColorHelper(0.6, 0.99);
-		
-		$.each(graph.edges, function(i, e) {
-			if (!edgeColors[e.options.label]) {
-				edgeColors[e.options.label] = colorHelper.next()[3];
-			}
-			
-			e.options.color = edgeColors[e.options.label];
-		});
-		
-		graph.edgeColors = edgeColors;
 	}
 };
