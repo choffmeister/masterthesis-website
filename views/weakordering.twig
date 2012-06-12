@@ -9,8 +9,6 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 	<div id="controls" class="workspace-controls">
 		<div>
 			<button class="btn" data-workspace-clickbind="reset">Reset positions</button>
-			<button class="btn" data-workspace-clickbind="unselect">Unselect all</button>
-			<button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
 		</div>
 	</div>
 	<div id="controls" class="workspace-controls">
@@ -24,6 +22,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 		<div>
 			<button class="btn" data-workspace-clickbind="highlightConnecting">Highlight connecting</button>
 			<button class="btn" data-workspace-clickbind="hideUnselected">Hide unselected</button>
+			<button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
 		</div>
 	</div>
 	<div id="content" class="workspace-content">
@@ -171,8 +170,16 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 				});
 
 				var vertexDragStart = function(vertex, x, y, state, event) {
-					if (event.ctrlKey) {
+					if (event.button == 0) {
 						state.selected = [];
+
+						vertex.highlight();
+						$.each(vertex.edges, function (i, e) {
+							if (e.source.options.highlighted && e.target.options.highlighted) {
+								e.highlight();
+							}
+						});
+
 						$.each(graph.vertices, function (i, v) {
 							if (v.options.highlighted) {
 								state.selected.push({ vertex: v, posX: v.positionX, posY: v.positionY });
@@ -182,7 +189,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 				};
 
 				var vertexDrag = function(vertex, dx, dy, x, y, state, event) {
-					if (event.ctrlKey) {
+					if (event.button == 0) {
 						vertex.positionX = x;
 						vertex.positionY = y;
 						vertex.draw();
@@ -200,7 +207,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 				};
 
 				var vertexClick = function (vertex, event) {
-					if (!event.ctrlKey) {
+					if (event.button == 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
 						if (vertex.options.highlighted) {
 							vertex.unhighlight();
 							$.each(vertex.edges, function (i, e) {
@@ -218,27 +225,29 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 				};
 
 				vertexDblClick = function (vertex, event) {
-					graph.walk(vertex, {
-						direction: 0,
-						edgeSelector: function (e) {
-							return e.isVisible();
-						},
-						vertexSelector: function (v) {
-							return v.isVisible();
-						},
-						edgeCallback: function (e) {
-							e.highlight();
-						},
-						vertexCallback: function (v) {
-							v.highlight()
-						},
-						notEdgeCallback: function (e) {
-							e.unhighlight();
-						},
-						notVertexCallback: function (v) {
-							v.unhighlight();
-						}
-					});
+					if (event.button == 0) {
+    					graph.walk(vertex, {
+    						direction: 0,
+    						edgeSelector: function (e) {
+    							return e.isVisible();
+    						},
+    						vertexSelector: function (v) {
+    							return v.isVisible();
+    						},
+    						edgeCallback: function (e) {
+    							e.highlight();
+    						},
+    						vertexCallback: function (v) {
+    							v.highlight()
+    						},
+    						notEdgeCallback: function (e) {
+    							e.unhighlight();
+    						},
+    						notVertexCallback: function (v) {
+    							v.unhighlight();
+    						}
+    					});
+					}
 				}
 
 				$.each(verticesRaw, function (i, v) {
@@ -258,6 +267,24 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 					var target = verticesRaw[e[1]];
 
 					graph.addEdge(source[1], target[1], { label: e[2], type: e[3], disabled: true });
+				});
+
+				$('#canvas').click(function (event) {
+					if (event.button == 0 && event.target == $('#canvas svg')[0] && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+						$.each(graph.edges, function (i, e) { e.unhighlight(); });
+						$.each(graph.vertices, function (i, v) { v.unhighlight(); });
+					}
+
+					if (event.button == 0 && event.shiftKey) {
+						var width = $(graph.element).width();
+						var height = $(graph.element).height();
+						var x = -(width*0.5 / graph.zoom) + graph.center[0] + event.offsetX / graph.zoom;
+						var y = -(height*0.5 / graph.zoom) + graph.center[1] + event.offsetY / graph.zoom;
+
+						graph.center[0] = graph.scale.unscaleX(x);
+						graph.center[1] = graph.scale.unscaleY(y);
+						graph.updateViewPort();
+					}
 				});
 
 				toggleRhoLayers();

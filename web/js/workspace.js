@@ -75,7 +75,7 @@
 						if ($(event.target).is('input')) return;
 						
 						switch (event.keyCode) {
-							case 13: if (event.ctrlKey) toggleFullscreen(); return false;
+							case 13: if (event.ctrlKey || event.metaKey) toggleFullscreen(); return false;
 							case 38: panUp(); return false;
 							case 40: panDown(); return false;
 							case 37: panLeft(); return false;

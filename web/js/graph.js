@@ -348,19 +348,28 @@ GraphVertex.prototype = {
 
 			if (vertex.options.drag) {
 				var state = {};
+				var internalState = {};
 				circ.drag(
 					function (dxRaw, dyRaw, xRaw, yRaw, event) {
-						var x = graph.scale.unscaleX(state.x + dxRaw / graph.zoom);
-						var y = graph.scale.unscaleY(state.y + dyRaw / graph.zoom);
+						if (internalState.started) {
+							var x = graph.scale.unscaleX(internalState.x + dxRaw / graph.zoom);
+							var y = graph.scale.unscaleY(internalState.y + dyRaw / graph.zoom);
+							
+							vertex.options.drag(vertex, x - internalState.x, y - internalState.y, x, y, state, event);
+						}
 						
-						vertex.options.drag(vertex, x - state.x, y - state.y, x, y, state, event);
+						var diffRaw = { x: internalState.screenX - xRaw, y: internalState.screenY - yRaw };
+						
+						if (!internalState.started && Math.sqrt(diffRaw.x*diffRaw.x + diffRaw.y*diffRaw.y) > 5) {
+							internalState.started = true;
+							if (vertex.options.dragStart) {
+								vertex.options.dragStart(vertex, internalState.x, internalState.y, state, event);
+							}
+						}
 					},
 					function (x, y, event) {
-						state = { x: graph.scale.scaleX(vertex.positionX), y: graph.scale.scaleY(vertex.positionY) };
-						
-						if (vertex.options.dragStart) {
-							vertex.options.dragStart(vertex, state.x, state.y, state, event);
-						}
+						state = {};
+						internalState = { x: graph.scale.scaleX(vertex.positionX), y: graph.scale.scaleY(vertex.positionY), screenX: x, screenY: y, started: false };
 					}
 				);
 			}
