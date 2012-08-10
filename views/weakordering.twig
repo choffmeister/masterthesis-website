@@ -9,6 +9,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 	<div id="controls" class="workspace-controls">
 		<div>
 			<button class="btn" data-workspace-clickbind="reset">Reset positions</button>
+			<button class="btn" data-workspace-clickbind="exportTikz">Export Tikz</button>
 		</div>
 	</div>
 	<div id="controls" class="workspace-controls">
@@ -26,8 +27,20 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 		</div>
 	</div>
 	<div id="content" class="workspace-content">
-	   <div id="canvas"></div>
+		<div id="canvas"></div>
 	</div>
+	<div class="modal hide" id="export-modal">
+		<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">×</button>
+		<h3>Export source code</h3>
+	</div>
+	<div class="modal-body">
+		<textarea style="width: 100%; height: 300px; box-sizing: border-box; resize: none;" readonly="readonly"></textarea>
+	</div>
+	<div class="modal-footer">
+		<a href="#" class="btn" data-dismiss="modal">Close</a>
+	</div>
+</div>
 </div>
 <script type="text/javascript">
 (function ($) {
@@ -166,6 +179,43 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 						});
 						$.each(graph.edges, function (i, e) { e.unhighlight(); });
 						$.each(graph.vertices, function (i, v) { v.unhighlight(); });
+					},
+					exportTikz: function () {
+						var result = '';
+
+						result += '\\begin{tikzpicture}\n';
+						result += '\\tikzstyle{vertex}=[]\n';
+						result += '\\tikzstyle{edge}=[->]\n';
+						result += '\\tikzstyle{onesided}=[edge,dashed]\n';
+						result += '\\tikzstyle{bothsided}=[edge]\n';
+						result += '\\tikzstyle{highlighted}=[]\n';
+						result += '\\tikzstyle{hidden}=[]\n';
+
+						$.each(graph.vertices, function (id, v) {
+							var x = Math.round(v.positionX * 10) / 1000.0;
+							var y = Math.round(v.positionY * 10) / 1000.0;
+							var type = 'vertex';
+
+							if (!v.isVisible()) type += ',hidden';
+							if (v.options.highlighted) type += ',highlighted';
+
+							result += '\\node[' + type + '] (' + v.options.absIndex + ') at (' + x + ',' + y + ') {' + v.id + '};\n';
+						});
+
+						$.each(graph.edges, function (i, e) {
+							var type = e.options.type == 0 ? 'onesided' : 'bothsided';
+
+							if (!e.isVisible()) type += ',hidden';
+							if (e.options.highlighted) type += ',highlighted';
+
+							result += '\\draw[' + type + '] (' + e.source.options.absIndex + ') -- (' + e.target.options.absIndex + ');\n';
+						});
+
+						result += '\\end{tikzpicture}\n';
+
+						$('#export-modal textarea').html('');
+						$('#export-modal textarea').html(result);
+						$('#export-modal').modal();
 					}
 				});
 
@@ -226,32 +276,33 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 
 				vertexDblClick = function (vertex, event) {
 					if (event.button == 0) {
-    					graph.walk(vertex, {
-    						direction: 0,
-    						edgeSelector: function (e) {
-    							return e.isVisible();
-    						},
-    						vertexSelector: function (v) {
-    							return v.isVisible();
-    						},
-    						edgeCallback: function (e) {
-    							e.highlight();
-    						},
-    						vertexCallback: function (v) {
-    							v.highlight()
-    						},
-    						notEdgeCallback: function (e) {
-    							e.unhighlight();
-    						},
-    						notVertexCallback: function (v) {
-    							v.unhighlight();
-    						}
-    					});
+						graph.walk(vertex, {
+							direction: 0,
+							edgeSelector: function (e) {
+								return e.isVisible();
+							},
+							vertexSelector: function (v) {
+								return v.isVisible();
+							},
+							edgeCallback: function (e) {
+								e.highlight();
+							},
+							vertexCallback: function (v) {
+								v.highlight()
+							},
+							notEdgeCallback: function (e) {
+								e.unhighlight();
+							},
+							notVertexCallback: function (v) {
+								v.unhighlight();
+							}
+						});
 					}
 				}
 
 				$.each(verticesRaw, function (i, v) {
 					graph.addVertex(v[1], {
+						absIndex: i,
 						label: v[1],
 						twistedLength: v[0],
 						disabled: true,
