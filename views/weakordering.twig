@@ -181,30 +181,44 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 						$.each(graph.vertices, function (i, v) { v.unhighlight(); });
 					},
 					exportTikz: function () {
+						var labeledVertices = confirm('Should the vertices be labeled?');
+
 						var result = '';
 
-						result += '\\begin{tikzpicture}\n';
-						result += '\\tikzstyle{vertex}=[]\n';
-						result += '\\tikzstyle{edge}=[->]\n';
+						result += '\\begin{tikzpicture}[scale=1]\n';
+						result += '\\newcommand{\\xspace}{1}\n';
+						result += '\\newcommand{\\yspace}{1}\n';
+						if (labeledVertices) {
+							result += '\\tikzstyle{vertex}=[font=\\small]\n';
+						} else {
+							result += '\\tikzstyle{vertex}=[draw,thick,circle,minimum size=2mm,inner sep=0pt]\n';
+						}
+						result += '\\tikzstyle{edge}=[thick,->]\n';
 						result += '\\tikzstyle{onesided}=[edge,dashed]\n';
 						result += '\\tikzstyle{bothsided}=[edge]\n';
-						result += '\\tikzstyle{highlighted}=[]\n';
-						result += '\\tikzstyle{hidden}=[]\n';
+						result += '\\tikzstyle{highlighted}=[thick]\n';
+						result += '\\tikzstyle{hidden}=[draw=none]\n';
+
+						$.each(generatorsRaw, function (i, g) {
+							result += '\\tikzstyle{s' + (i + 1) + '}=[]\n';
+						});
 
 						$.each(graph.vertices, function (id, v) {
 							var x = Math.round(v.positionX * 10) / 1000.0;
 							var y = Math.round(v.positionY * 10) / 1000.0;
 							var type = 'vertex';
+							var label = labeledVertices ? v.id : '';
 
 							if (!v.isVisible()) type += ',hidden';
 							if (v.options.highlighted) type += ',highlighted';
 
-							result += '\\node[' + type + '] (' + v.options.absIndex + ') at (' + x + ',' + y + ') {' + v.id + '};\n';
+							result += '\\node[' + type + '] (' + v.options.absIndex + ') at (\\xspace*' + x + ',\\yspace*' + y + ') {' + label + '};\n';
 						});
 
 						$.each(graph.edges, function (i, e) {
-							var type = e.options.type == 0 ? 'onesided' : 'bothsided';
+							var type = 's' + e.options.label;
 
+							type += e.options.type == 0 ? ',onesided' : ',bothsided';
 							if (!e.isVisible()) type += ',hidden';
 							if (e.options.highlighted) type += ',highlighted';
 
