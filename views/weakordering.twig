@@ -200,7 +200,14 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 						result += '\\tikzstyle{hidden}=[draw=none]\n';
 
 						$.each(generatorsRaw, function (i, g) {
-							result += '\\tikzstyle{s' + (i + 1) + '}=[]\n';
+							var colorRaw = graph.edgeColorsHighlighted[i];
+							var color = colorRaw[0] + ',' + colorRaw[1] + ',' + colorRaw[2];
+
+							result += '\\definecolor{s' + (i + 1) + 'color}{RGB}{' + color + '}\n';
+						});
+
+						$.each(generatorsRaw, function (i, g) {
+							result += '\\tikzstyle{s' + (i + 1) + '}=[s' + (i + 1) + 'color]\n';
 						});
 
 						$.each(graph.vertices, function (id, v) {
