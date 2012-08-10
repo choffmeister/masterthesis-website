@@ -196,8 +196,8 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 						result += '\\tikzstyle{edge}=[thick,->]\n';
 						result += '\\tikzstyle{onesided}=[edge,dashed]\n';
 						result += '\\tikzstyle{bothsided}=[edge]\n';
-						result += '\\tikzstyle{highlighted}=[thick]\n';
-						result += '\\tikzstyle{hidden}=[draw=none]\n';
+						result += '\\tikzstyle{unhighlighted}=[]\n';
+						result += '\\tikzstyle{highlighted}=[]\n';
 
 						$.each(generatorsRaw, function (i, g) {
 							var colorRaw = graph.edgeColorsHighlighted[i];
@@ -215,26 +215,27 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 							var y = Math.round(v.positionY * 10) / 1000.0;
 							var type = 'vertex';
 							var label = labeledVertices ? v.id : '';
-
-							if (!v.isVisible()) type += ',hidden';
-							if (v.options.highlighted) type += ',highlighted';
-
-							result += '\\node[' + type + '] (' + v.options.absIndex + ') at (\\xspace*' + x + ',\\yspace*' + y + ') {' + label + '};\n';
+							type += v.options.highlighted ? ',highlighted' : ',unhighlighted';
+							
+							if (v.isVisible()) {
+								result += '\\node[' + type + '] (' + v.options.absIndex + ') at (\\xspace*' + x + ',\\yspace*' + y + ') {' + label + '};\n';
+							}
 						});
 
 						$.each(graph.edges, function (i, e) {
 							var type = 's' + e.options.label;
 
 							type += e.options.type == 0 ? ',onesided' : ',bothsided';
-							if (!e.isVisible()) type += ',hidden';
-							if (e.options.highlighted) type += ',highlighted';
+							type += e.options.highlighted ? ',highlighted' : ',unhighlighted';
 							if (e.options.bending > 0) {
 								type += ',bend left';
 							} else if (e.options.bending < 0) {
 								type += ',bend right';
 							}
 
-							result += '\\draw[' + type + '] (' + e.source.options.absIndex + ') edge (' + e.target.options.absIndex + ');\n';
+							if (e.isVisible()) {
+								result += '\\draw[' + type + '] (' + e.source.options.absIndex + ') edge (' + e.target.options.absIndex + ');\n';
+							}
 						});
 
 						result += '\\end{tikzpicture}\n';
