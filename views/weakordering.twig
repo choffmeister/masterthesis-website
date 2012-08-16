@@ -22,6 +22,8 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 		</div>
 		<div>
 			<button class="btn" data-workspace-clickbind="highlightConnecting">Highlight connecting</button>
+			<button class="btn" data-workspace-clickbind="highlightPrecessors">Highlight precessors</button>
+			<button class="btn" data-workspace-clickbind="highlightSuccessors">Highlight successors</button>
 			<button class="btn" data-workspace-clickbind="hideUnselected">Hide unselected</button>
 			<button class="btn" data-workspace-clickbind="unhide">Unhide all</button>
 		</div>
@@ -134,7 +136,7 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 						});
 
 						if (selection.length != 2) {
-							alert('Please select exactly two elements by double clicking nodes before using this function.');
+							alert('Please select exactly two elements before using this function.');
 							return;
 						}
 
@@ -158,6 +160,78 @@ Weak ordering graph of coxeter group $W = {{ group.name | default('-') }}$ with 
 								if (pos > -1) {
 									connectingVertices.splice(pos, 1);
 								}
+							}
+						});
+
+						$.each(connectingVertices, function (i, v) {
+							v.highlight();
+							$.each(v.edges, function (i, e) {
+								if (e.source.options.highlighted && e.target.options.highlighted) {
+									e.highlight();
+								}
+							});
+						});
+					},
+					highlightPrecessors: function () {
+						var selection = [];
+
+						$.each(graph.vertices, function (i, v) {
+							if (v.options.highlighted && v.isVisible()) {
+								selection.push(v);
+							}
+						});
+
+						if (selection.length != 1) {
+							alert('Please select exactly one element before using this function.');
+							return;
+						}
+
+						var first = selection[0];
+
+						$.each(graph.edges, function (i, e) { e.unhighlight(); });
+
+						var connectingVertices = [];
+
+						graph.walk(first, {
+							direction: -1,
+							vertexCallback: function (v) {
+								connectingVertices.push(v);
+							}
+						});
+
+						$.each(connectingVertices, function (i, v) {
+							v.highlight();
+							$.each(v.edges, function (i, e) {
+								if (e.source.options.highlighted && e.target.options.highlighted) {
+									e.highlight();
+								}
+							});
+						});
+					},
+					highlightSuccessors: function () {
+						var selection = [];
+
+						$.each(graph.vertices, function (i, v) {
+							if (v.options.highlighted && v.isVisible()) {
+								selection.push(v);
+							}
+						});
+
+						if (selection.length != 1) {
+							alert('Please select exactly one element before using this function.');
+							return;
+						}
+
+						var first = selection[0];
+
+						$.each(graph.edges, function (i, e) { e.unhighlight(); });
+
+						var connectingVertices = [];
+
+						graph.walk(first, {
+							direction: 1,
+							vertexCallback: function (v) {
+								connectingVertices.push(v);
 							}
 						});
 
