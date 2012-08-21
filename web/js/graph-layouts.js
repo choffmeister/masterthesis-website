@@ -29,7 +29,7 @@ GraphLayout.WeakOrdering = {
 		$.each(levels, function(twistedLength, vertexIndices) {
 			$.each(vertexIndices, function (i, vertexIndex) {
 				graph.vertices[vertexIndex].positionX = parseFloat((size[0] - vertexIndices.length) / 2 - (size[0] - 1) / 2 + i) * 75;
-				graph.vertices[vertexIndex].positionY = parseFloat(twistedLength) * 150;
+				graph.vertices[vertexIndex].positionY = -parseFloat(twistedLength) * 150;
 			});
 		});
 	}
