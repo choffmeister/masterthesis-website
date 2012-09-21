@@ -32,14 +32,60 @@ class Importer
 
         $zip->close();
     }
+    
+    private static function CsvToAssocArray($csv)
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $csv);
+        $headers = str_getcsv($lines[0], ';', '"', '');
+        $result = array();
+        
+        for ($i = 1; $i < count($lines); $i++)
+        {
+            if (strlen($lines[$i]) == 0) continue;
+            
+            $line = str_getcsv($lines[$i], ';', '"', '\\');
+            $lineResult = (object)null;
+            
+            foreach ($line as $k => $v)
+            {
+                $propertyName = $headers[$k];
+                
+                $lineResult->$propertyName = $v;
+            }
+            
+            $result[] = $lineResult;
+        }
+
+        return $result;
+    }
 
     private static function importWeakOrdering($db, $dataRaw, $verticesRaw, $edgesRaw)
     {
-        $data = json_decode($dataRaw);
-        if (json_last_error() != JSON_ERROR_NONE) {
-            throw new \Exception('Error while decoding json');
-        }
-
+        $data = self::CsvToAssocArray($dataRaw);
+        $data = $data[0];
+        $data->rank = intval($data->rank);
+        $data->size = intval($data->size);
+        $data->generators = json_decode($data->generators);
+        $data->matrix = json_decode($data->matrix);
+        $data->wk_max_length = intval($data->wk_max_length);
+        $data->wk_size = intval($data->wk_size);
+        
+        $vertices = array_map(function($value) {
+            return array(
+                intval($value->twistedLength),
+                $value->name
+            );
+        }, self::CsvToAssocArray($verticesRaw));
+        
+        $edges = array_map(function($value) {
+            return array(
+                intval($value->sourceIndex),
+                intval($value->targetIndex),
+                intval($value->label),
+                intval($value->type)
+            );
+        }, self::CsvToAssocArray($edgesRaw));
+        
         $groupId = 0;
         $group = $db->fetchAssoc('SELECT * FROM groups WHERE name = ?', array($data->name));
         if ($group) {
@@ -60,8 +106,8 @@ class Importer
             'name' => $data->automorphism,
             'wk_size' => $data->wk_size == 'infinity' ? 0 : $data->wk_size,
             'wk_max_length' => $data->wk_max_length == 'infinity' ? 0 : $data->wk_max_length,
-            'wk_vertices' => $verticesRaw,
-            'wk_edges' => $edgesRaw
+            'wk_vertices' => json_encode($vertices),
+            'wk_edges' => json_encode($edges)
         ));
 
         printf("Imported %s.\n", $data->name);
